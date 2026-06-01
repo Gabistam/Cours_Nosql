@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lancement du projet · SportShopy — Architecture & Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0a0f1a;
+  --bg2:       #0f1729;
+  --bg3:       #131e35;
+  --bg4:       #1a2640;
+  --border:    rgba(99,179,237,.15);
+  --border2:   rgba(99,179,237,.25);
+
+  --primary:   #3b82f6;
+  --primary-d: #1d4ed8;
+  --primary-g: linear-gradient(135deg,#3b82f6,#1d4ed8);
+
+  --green:     #10b981;
+  --green-d:   #059669;
+  --green-g:   linear-gradient(135deg,#10b981,#059669);
+
+  --amber:     #f59e0b;
+  --amber-d:   #d97706;
+
+  --danger:    #ef4444;
+  --purple:    #8b5cf6;
+  --cyan:      #06b6d4;
+  --accent:    #3b82f6;   /* couleur d'accentuation — bleu setup */
+  --accent-g:  linear-gradient(135deg,#3b82f6,#06b6d4);
+
+  --text:      #e2e8f0;
+  --text-muted:#94a3b8;
+  --text-dim:  #64748b;
+
+  --radius:    12px;
+  --radius-lg: 20px;
+  --shadow:    0 4px 24px rgba(0,0,0,.4);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,.6);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+}
+code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── HEADER ─────────────────────────────────────────────────────────── */
+.site-header {
+  background: linear-gradient(135deg, #0a0f1a 0%, #0d1b30 50%, #091220 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.header-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+.header-title { font-size: 1.15rem; font-weight: 700; color: #fff; flex: 1; }
+.header-title span { color: var(--cyan); }
+.header-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  font-size: 11px; font-weight: 500; padding: 4px 12px;
+  border-radius: 20px; border: 1px solid var(--border);
+  color: var(--text-muted); background: rgba(255,255,255,.03);
+  display: flex; align-items: center; gap: 5px;
+}
+.pill.day   { border-color: rgba(59,130,246,.3);  color: var(--primary); }
+.pill.stack { border-color: rgba(6,182,212,.3);   color: var(--cyan); }
+.pill.phase { border-color: rgba(139,92,246,.3);  color: var(--purple); }
+
+/* ── TABS ────────────────────────────────────────────────────────────── */
+.tabs-bar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 73px;
+  z-index: 99;
+}
+.tabs-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 32px;
+  display: flex; gap: 0; overflow-x: auto;
+}
+.tab-btn {
+  background: none; border: none; color: var(--text-muted);
+  font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 500;
+  padding: 14px 22px; cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all .2s; white-space: nowrap;
+  display: flex; align-items: center; gap: 7px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+  background: rgba(6,182,212,.04);
+}
+
+/* ── MAIN LAYOUT ─────────────────────────────────────────────────────── */
+.main-wrap { max-width: 1200px; margin: 0 auto; padding: 40px 32px 80px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── PROGRESS ────────────────────────────────────────────────────────── */
+.progress-track {
+  background: var(--bg3); border-radius: 4px; height: 5px;
+  margin-bottom: 40px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--accent-g);
+  border-radius: 4px; transition: width .6s ease;
+}
+
+/* ── HERO ────────────────────────────────────────────────────────────── */
+.section-hero {
+  background: linear-gradient(135deg, var(--bg3) 0%, var(--bg4) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px 44px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+}
+.section-hero::before {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(59,130,246,.08), transparent 70%);
+  border-radius: 50%;
+}
+.section-hero-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.section-hero h1 {
+  font-size: 2rem; font-weight: 800; color: #fff;
+  margin-bottom: 8px; line-height: 1.2;
+}
+.section-hero h1 span { color: var(--cyan); }
+.section-hero p { color: var(--text-muted); font-size: .95rem; max-width: 680px; }
+.hero-meta { display: flex; gap: 24px; margin-top: 20px; flex-wrap: wrap; }
+.hero-meta-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-muted); }
+.hero-meta-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── CARDS ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px 32px;
+  margin-bottom: 24px; transition: border-color .2s;
+}
+.card:hover { border-color: var(--border2); }
+.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.card-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.card-icon.blue   { background: rgba(59,130,246,.15); }
+.card-icon.green  { background: rgba(16,185,129,.15); }
+.card-icon.amber  { background: rgba(245,158,11,.15); }
+.card-icon.cyan   { background: rgba(6,182,212,.15); }
+.card-icon.purple { background: rgba(139,92,246,.15); }
+.card-icon.danger { background: rgba(239,68,68,.15); }
+.card-title { font-size: 1rem; font-weight: 700; color: #fff; }
+.card-subtitle { font-size: .8rem; color: var(--text-muted); margin-top: 2px; }
+
+/* ── GRID ────────────────────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+@media(max-width:768px){
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .main-wrap { padding: 24px 16px 60px; }
+  .header-inner { padding: 14px 16px; }
+  .tabs-inner { padding: 0 16px; }
+  .section-hero { padding: 28px 24px; }
+}
+
+/* ── BOXES ───────────────────────────────────────────────────────────── */
+.box-info {
+  background: rgba(59,130,246,.07); border: 1px solid rgba(59,130,246,.2);
+  border-left: 4px solid var(--primary); border-radius: var(--radius);
+  padding: 16px 20px; margin: 16px 0; font-size: .88rem; color: var(--text-muted);
+}
+.box-warning {
+  background: rgba(245,158,11,.07); border: 1px solid rgba(245,158,11,.2);
+  border-left: 4px solid var(--amber); border-radius: var(--radius);
+  padding: 16px 20px; margin: 16px 0; font-size: .88rem; color: var(--text-muted);
+}
+.box-success {
+  background: rgba(16,185,129,.07); border: 1px solid rgba(16,185,129,.2);
+  border-left: 4px solid var(--green); border-radius: var(--radius);
+  padding: 16px 20px; margin: 16px 0; font-size: .88rem; color: var(--text-muted);
+}
+.box-cyan {
+  background: rgba(6,182,212,.06); border: 1px solid rgba(6,182,212,.2);
+  border-left: 4px solid var(--cyan); border-radius: var(--radius);
+  padding: 16px 20px; margin: 16px 0; font-size: .88rem; color: var(--text-muted);
+}
+.box-danger {
+  background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2);
+  border-left: 4px solid var(--danger); border-radius: var(--radius);
+  padding: 16px 20px; margin: 16px 0; font-size: .88rem; color: var(--text-muted);
+}
+.box-info strong, .box-warning strong, .box-success strong,
+.box-cyan strong, .box-danger strong { color: var(--text); }
+
+/* ── CODE BLOCKS ─────────────────────────────────────────────────────── */
+.code-block {
+  background: #060d1a; border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; margin: 16px 0;
+}
+.code-header {
+  background: var(--bg3); border-bottom: 1px solid var(--border);
+  padding: 8px 16px; display: flex; align-items: center; justify-content: space-between;
+}
+.code-lang {
+  font-size: 11px; font-weight: 600; color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.code-dots { display: flex; gap: 6px; }
+.code-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.code-dots span:nth-child(1) { background: #ef4444; }
+.code-dots span:nth-child(2) { background: #f59e0b; }
+.code-dots span:nth-child(3) { background: #10b981; }
+.code-body {
+  padding: 20px 22px; overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .82rem; line-height: 1.8; color: #a8b4c8;
+}
+.k { color: #569cd6; }
+.s { color: #ce9178; }
+.n { color: #b5cea8; }
+.c { color: #6a9955; }
+.f { color: #dcdcaa; }
+.p { color: #9cdcfe; }
+.o { color: #d4d4d4; }
+.cy { color: var(--cyan); }
+
+/* ── STEPS ───────────────────────────────────────────────────────────── */
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step { display: flex; gap: 20px; position: relative; padding-bottom: 28px; }
+.step:last-child { padding-bottom: 0; }
+.step-line { display: flex; flex-direction: column; align-items: center; }
+.step-num {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--primary-g);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 700; color: #fff;
+  flex-shrink: 0; z-index: 1;
+}
+.step-num.cyan-bg { background: linear-gradient(135deg,#06b6d4,#0891b2); }
+.step-connector { flex: 1; width: 2px; background: var(--border); margin-top: 6px; }
+.step-content { flex: 1; padding-top: 4px; }
+.step-title { font-weight: 700; color: #fff; font-size: .95rem; margin-bottom: 6px; }
+.step-desc { color: var(--text-muted); font-size: .87rem; }
+
+/* ── SECTION TITLES ──────────────────────────────────────────────────── */
+h2.section-title {
+  font-size: 1.3rem; font-weight: 800; color: #fff;
+  margin: 36px 0 20px; display: flex; align-items: center; gap: 10px;
+}
+h2.section-title .line { flex: 1; height: 1px; background: var(--border); }
+h3.sub-title {
+  font-size: 1rem; font-weight: 700; color: var(--text);
+  margin: 24px 0 12px; display: flex; align-items: center; gap: 8px;
+}
+p { color: var(--text-muted); font-size: .9rem; line-height: 1.8; margin-bottom: 12px; }
+p strong { color: var(--text); }
+
+/* ── COMPARISON TABLE ────────────────────────────────────────────────── */
+.compare-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.compare-table th {
+  background: var(--bg3); color: var(--text-muted); font-weight: 600;
+  font-size: .75rem; letter-spacing: .06em; text-transform: uppercase;
+  padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border);
+}
+.compare-table td {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  color: var(--text-muted); vertical-align: top;
+}
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:hover td { background: rgba(255,255,255,.02); }
+.compare-table td:first-child { color: var(--text); font-weight: 600; }
+
+/* ── FILE TREE ───────────────────────────────────────────────────────── */
+.file-tree {
+  background: #060d1a; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 24px;
+  font-family: 'JetBrains Mono', monospace; font-size: .82rem;
+  line-height: 2; overflow-x: auto;
+}
+.ft-dir  { color: #9cdcfe; font-weight: 600; }
+.ft-file { color: #a8b4c8; }
+.ft-comment { color: #6a9955; }
+.ft-highlight { color: var(--cyan); font-weight: 600; }
+.ft-new { color: #b5cea8; }
+
+/* ── TERMINAL ────────────────────────────────────────────────────────── */
+.terminal {
+  background: #030810; border: 1px solid rgba(6,182,212,.2);
+  border-radius: var(--radius); overflow: hidden; margin: 16px 0;
+}
+.terminal-bar {
+  background: #0d1829; border-bottom: 1px solid rgba(6,182,212,.15);
+  padding: 8px 16px; display: flex; align-items: center; gap: 8px;
+}
+.terminal-dots { display: flex; gap: 6px; }
+.terminal-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.terminal-dots span:nth-child(1) { background: #ef4444; }
+.terminal-dots span:nth-child(2) { background: #f59e0b; }
+.terminal-dots span:nth-child(3) { background: #10b981; }
+.terminal-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  color: var(--text-dim); margin-left: 8px;
+}
+.terminal-body {
+  padding: 18px 22px; font-family: 'JetBrains Mono', monospace;
+  font-size: .82rem; line-height: 1.9; color: #a8b4c8;
+}
+.t-prompt { color: var(--cyan); }
+.t-cmd    { color: var(--text); }
+.t-out    { color: #6a9955; }
+.t-ok     { color: var(--green); }
+.t-err    { color: var(--danger); }
+.t-comment{ color: var(--text-dim); }
+
+/* ── RESULT PANEL ────────────────────────────────────────────────────── */
+.result-panel {
+  background: #030810; border: 1px solid rgba(59,130,246,.2);
+  border-radius: var(--radius); padding: 20px 24px; margin: 16px 0;
+  font-family: 'JetBrains Mono', monospace; font-size: .82rem;
+  color: #9cdcfe; line-height: 1.9;
+}
+.result-panel .ok  { color: var(--green); }
+.result-panel .key { color: #9cdcfe; }
+.result-panel .val { color: #ce9178; }
+.result-panel .num { color: #b5cea8; }
+
+/* ── CHECKLIST ───────────────────────────────────────────────────────── */
+.checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.checklist li {
+  display: flex; align-items: flex-start; gap: 10px;
+  color: var(--text-muted); font-size: .88rem;
+}
+.checklist li::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.checklist li.warn::before { content: '⚠'; color: var(--amber); }
+.checklist li.cmd::before  { content: '$'; color: var(--cyan); font-family: 'JetBrains Mono', monospace; }
+
+/* ── TAGS ────────────────────────────────────────────────────────────── */
+.tag {
+  display: inline-block; font-size: .72rem; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace; letter-spacing: .04em;
+}
+.tag.blue   { background: rgba(59,130,246,.15);  color: #93c5fd; border: 1px solid rgba(59,130,246,.25); }
+.tag.green  { background: rgba(16,185,129,.15);  color: #6ee7b7; border: 1px solid rgba(16,185,129,.25); }
+.tag.amber  { background: rgba(245,158,11,.15);  color: #fcd34d; border: 1px solid rgba(245,158,11,.25); }
+.tag.purple { background: rgba(139,92,246,.15);  color: #c4b5fd; border: 1px solid rgba(139,92,246,.25); }
+.tag.cyan   { background: rgba(6,182,212,.12);   color: #67e8f9; border: 1px solid rgba(6,182,212,.25); }
+
+/* ── MINI CARDS ──────────────────────────────────────────────────────── */
+.mini-cards { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+.mini-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 18px; font-size: .82rem;
+  color: var(--text-muted); display: flex; align-items: center;
+  gap: 8px; flex: 1; min-width: 160px;
+}
+.mini-card .icon { font-size: 1.1rem; }
+.mini-card strong { color: var(--text); display: block; font-size: .78rem; margin-bottom: 1px; }
+
+/* ── PROXY DIAGRAM ───────────────────────────────────────────────────── */
+.proxy-diagram {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; flex-wrap: wrap; margin: 20px 0;
+}
+.proxy-box {
+  background: var(--bg4); border-radius: 10px; padding: 14px 22px;
+  text-align: center; min-width: 130px;
+}
+.proxy-box .pb-title { font-weight: 700; font-size: .88rem; color: var(--text); }
+.proxy-box .pb-sub   { font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--text-muted); margin-top: 4px; }
+.proxy-box.blue  { border: 1px solid rgba(59,130,246,.35); }
+.proxy-box.cyan  { border: 1px solid rgba(6,182,212,.35); }
+.proxy-box.green { border: 1px solid rgba(16,185,129,.35); }
+.proxy-arrow { font-size: 1.5rem; color: var(--text-dim); }
+.proxy-label { font-size: .75rem; color: var(--text-dim); text-align: center; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+
+/* ── ANIMATIONS ──────────────────────────────────────────────────────── */
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.tab-content.active { animation: fadeIn .35s ease; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); animation: pulse 2s infinite;
+  display: inline-block; margin-right: 6px;
+}
+
+/* ── PHASE ROADMAP ───────────────────────────────────────────────────── */
+.phase-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.phase-row:last-child { border-bottom: none; }
+.phase-num {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 700; flex-shrink: 0;
+}
+.phase-num.done    { background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3); }
+.phase-num.current { background: rgba(6,182,212,.15);  color: var(--cyan);  border: 1px solid rgba(6,182,212,.3); }
+.phase-num.next    { background: var(--bg3); color: var(--text-muted); border: 1px solid var(--border); }
+.phase-name { font-weight: 700; font-size: .88rem; color: var(--text); }
+.phase-sub  { font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
+.phase-tag  { margin-left: auto; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────────── -->
+<header class="site-header">
+  <div class="header-inner">
+    <span class="header-badge">Phase 0</span>
+    <h1 class="header-title">Lancement du projet · <span>Architecture & Setup</span></h1>
+    <div class="header-pills">
+      <span class="pill day">📅 Jour 1 — Introduction</span>
+      <span class="pill stack">⚙️ Express + React + Vite</span>
+      <span class="pill phase">🗺️ Avant le NoSQL</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── TABS ────────────────────────────────────────────────────────── -->
+<nav class="tabs-bar">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="switchTab('archi')">🏗️ Architecture</button>
+    <button class="tab-btn" onclick="switchTab('install')">📦 Installation</button>
+    <button class="tab-btn" onclick="switchTab('lancement')">▶️ Lancement</button>
+    <button class="tab-btn" onclick="switchTab('recap')">📋 Récap</button>
+  </div>
+</nav>
+
+<main class="main-wrap">
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  TAB — ARCHITECTURE                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div id="tab-archi" class="tab-content active">
+
+  <div class="progress-track"><div class="progress-fill" style="width:25%"></div></div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">🏗️</div>
+    <h1>Comprendre le <span>projet de base</span></h1>
+    <p>Avant de toucher à une seule base de données NoSQL, tu dois comprendre
+    comment le projet est structuré. Deux processus distincts qui se parlent via HTTP —
+    c'est ce qu'on appelle une architecture <strong>client / serveur découplée</strong>.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><span class="dot" style="background:var(--cyan)"></span>Express 4 · Node.js</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--primary)"></span>React 18 · Vite</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--purple)"></span>Tailwind CSS</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--green)"></span>Proxy transparent</div>
+    </div>
+  </div>
+
+  <!-- Structure dossiers -->
+  <h2 class="section-title">📁 Structure du projet <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon cyan">📂</div>
+      <div>
+        <div class="card-title">Organisation des fichiers</div>
+        <div class="card-subtitle">Deux sous-projets indépendants dans un même dépôt</div>
+      </div>
+    </div>
+    <div class="file-tree">
+<span class="ft-dir">sportshopy/</span><br>
+├── <span class="ft-dir">server/</span>             <span class="ft-comment">← API REST (Node.js + Express)</span><br>
+│   ├── <span class="ft-highlight">server.js</span>       <span class="ft-comment">← point d'entrée — lance le serveur</span><br>
+│   ├── <span class="ft-highlight">app.js</span>          <span class="ft-comment">← configuration Express (routes, middlewares)</span><br>
+│   ├── <span class="ft-dir">config/</span><br>
+│   │   ├── <span class="ft-file">env.js</span>          <span class="ft-comment">← lit les variables .env</span><br>
+│   │   └── <span class="ft-file">database.js</span>     <span class="ft-comment">← connexion MongoDB (phase 1)</span><br>
+│   ├── <span class="ft-dir">middleware/</span><br>
+│   │   ├── <span class="ft-file">errorHandler.js</span> <span class="ft-comment">← gestion centralisée des erreurs</span><br>
+│   │   └── <span class="ft-file">validateQuery.js</span><span class="ft-comment">← validation des paramètres URL</span><br>
+│   ├── <span class="ft-dir">models/</span>           <span class="ft-comment">← schémas Mongoose (phase 1)</span><br>
+│   ├── <span class="ft-dir">routes/</span>           <span class="ft-comment">← endpoints API (phase 1+)</span><br>
+│   ├── <span class="ft-dir">services/</span>         <span class="ft-comment">← logique métier</span><br>
+│   ├── <span class="ft-dir">scripts/</span>          <span class="ft-comment">← seed, migrations</span><br>
+│   └── <span class="ft-file">package.json</span>     <span class="ft-comment">← dépendances serveur</span><br>
+│<br>
+├── <span class="ft-dir">client/</span>             <span class="ft-highlight">← Interface React (Vite)</span><br>
+│   ├── <span class="ft-highlight">vite.config.js</span>  <span class="ft-comment">← proxy /api et /img → Express</span><br>
+│   └── <span class="ft-dir">src/</span><br>
+│       ├── <span class="ft-file">App.jsx</span>         <span class="ft-comment">← routing React Router</span><br>
+│       ├── <span class="ft-dir">components/</span>     <span class="ft-comment">← composants réutilisables</span><br>
+│       ├── <span class="ft-dir">pages/</span>          <span class="ft-comment">← une page = une route</span><br>
+│       ├── <span class="ft-dir">context/</span>        <span class="ft-comment">← état global (phase 1+)</span><br>
+│       ├── <span class="ft-dir">hooks/</span>          <span class="ft-comment">← logique React custom</span><br>
+│       └── <span class="ft-dir">services/</span>       <span class="ft-comment">← appels HTTP vers l'API</span><br>
+│<br>
+├── <span class="ft-dir">data/</span>               <span class="ft-comment">← fichiers JSON de seed</span><br>
+├── <span class="ft-dir">img/</span>                <span class="ft-comment">← images produits .webp (servies par Express)</span><br>
+├── <span class="ft-file">.env.example</span>       <span class="ft-comment">← modèle de variables d'environnement</span><br>
+└── <span class="ft-file">docker-compose.yml</span>  <span class="ft-comment">← services NoSQL (Redis, Cassandra, Neo4j)</span><br>
+    </div>
+  </div>
+
+  <!-- Deux processus -->
+  <h2 class="section-title">⚙️ Deux processus, une seule app <span class="line"></span></h2>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon cyan">🖥️</div>
+        <div>
+          <div class="card-title">Serveur — Express</div>
+          <div class="card-subtitle">Port 3001 · Node.js</div>
+        </div>
+      </div>
+      <p>Le serveur expose une <strong>API REST</strong>. Il reçoit des requêtes HTTP, interroge les bases de données, et renvoie du JSON. Il ne sait rien de React.</p>
+      <ul class="checklist">
+        <li>Répond sur <code>http://localhost:3001</code></li>
+        <li>Toutes les routes commencent par <code>/api/</code></li>
+        <li>Sert aussi les images sur <code>/img/</code></li>
+        <li>Lance avec <code>npm run dev</code> dans <code>server/</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">⚛️</div>
+        <div>
+          <div class="card-title">Client — React + Vite</div>
+          <div class="card-subtitle">Port 5173 · navigateur</div>
+        </div>
+      </div>
+      <p>Le client est une <strong>SPA (Single Page Application)</strong>. Vite sert les fichiers React en développement et proxy les appels API vers Express.</p>
+      <ul class="checklist">
+        <li>Répond sur <code>http://localhost:5173</code></li>
+        <li>C'est l'URL que l'utilisateur ouvre</li>
+        <li>Les appels <code>/api/*</code> sont redirigés vers :3001</li>
+        <li>Lance avec <code>npm run dev</code> dans <code>client/</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Proxy Vite -->
+  <h2 class="section-title">🔀 Le proxy Vite — pourquoi c'est essentiel <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon purple">🔀</div>
+      <div>
+        <div class="card-title">Comment React parle à Express</div>
+        <div class="card-subtitle">client/vite.config.js</div>
+      </div>
+    </div>
+    <p>Sans proxy, quand React fait <code>fetch('/api/products')</code> depuis le port <strong>5173</strong>,
+    le navigateur cherche <code>localhost:5173/api/products</code> — introuvable. Le proxy Vite intercepte
+    toutes les requêtes <code>/api/*</code> et <code>/img/*</code> et les redirige vers le port <strong>3001</strong>
+    de manière transparente.</p>
+
+    <div class="proxy-diagram">
+      <div>
+        <div class="proxy-box blue">
+          <div class="pb-title">⚛️ React</div>
+          <div class="pb-sub">localhost:5173</div>
+        </div>
+      </div>
+      <div class="proxy-arrow">→</div>
+      <div>
+        <div class="proxy-box cyan">
+          <div class="pb-title">🔀 Proxy Vite</div>
+          <div class="pb-sub">/api/* /img/*</div>
+        </div>
+        <div class="proxy-label">intercepte les requêtes</div>
+      </div>
+      <div class="proxy-arrow">→</div>
+      <div>
+        <div class="proxy-box green">
+          <div class="pb-title">🖥️ Express</div>
+          <div class="pb-sub">localhost:3001</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · client/vite.config.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">import</span> { defineConfig } <span class="k">from</span> <span class="s">'vite'</span><br>
+<span class="k">import</span> react <span class="k">from</span> <span class="s">'@vitejs/plugin-react'</span><br><br>
+<span class="k">export default</span> <span class="f">defineConfig</span>({<br>
+&nbsp;&nbsp;<span class="p">plugins</span>: [<span class="f">react</span>()],<br>
+&nbsp;&nbsp;<span class="p">server</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">port</span>: <span class="n">5173</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">proxy</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">'/api'</span>: { <span class="p">target</span>: <span class="s">'http://localhost:3001'</span>, <span class="p">changeOrigin</span>: <span class="k">true</span> },<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">'/img'</span>: { <span class="p">target</span>: <span class="s">'http://localhost:3001'</span>, <span class="p">changeOrigin</span>: <span class="k">true</span> },<br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;},<br>
+})
+      </div>
+    </div>
+    <div class="box-info"><strong>En production</strong>, ce proxy n'existe plus. À la place, un vrai reverse proxy (Nginx, Caddy) ou un hébergement comme Vercel/Render gère la redirection. Pour le cours, Vite suffit.</div>
+  </div>
+
+  <!-- Routing React -->
+  <h2 class="section-title">🗺️ Le routing React <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon blue">🗺️</div>
+      <div>
+        <div class="card-title">5 pages, 5 routes</div>
+        <div class="card-subtitle">client/src/App.jsx</div>
+      </div>
+    </div>
+    <p>L'application définit cinq routes. Certaines pages sont remplies dès la Phase 0, d'autres sont des placeholders qui seront activés au fil des phases.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">jsx · client/src/App.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">import</span> { Routes, Route } <span class="k">from</span> <span class="s">'react-router-dom'</span><br>
+<span class="k">import</span> Header      <span class="k">from</span> <span class="s">'./components/common/Header'</span><br>
+<span class="k">import</span> Footer      <span class="k">from</span> <span class="s">'./components/common/Footer'</span><br>
+<span class="k">import</span> HomePage      <span class="k">from</span> <span class="s">'./pages/HomePage'</span>      <span class="c">// ← Phase 1 MongoDB</span><br>
+<span class="k">import</span> CataloguePage <span class="k">from</span> <span class="s">'./pages/CataloguePage'</span>  <span class="c">// ← Phase 1 MongoDB</span><br>
+<span class="k">import</span> ProductPage   <span class="k">from</span> <span class="s">'./pages/ProductPage'</span>    <span class="c">// ← Phase 1 MongoDB</span><br>
+<span class="k">import</span> CartPage      <span class="k">from</span> <span class="s">'./pages/CartPage'</span>      <span class="c">// ← Phase 2 Redis</span><br>
+<span class="k">import</span> AnalyticsPage <span class="k">from</span> <span class="s">'./pages/AnalyticsPage'</span>  <span class="c">// ← Phase 3 Cassandra</span><br><br>
+<span class="k">export default function</span> <span class="f">App</span>() {<br>
+&nbsp;&nbsp;<span class="k">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">div</span> className=<span class="s">"min-h-screen flex flex-col"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">Header</span> /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">main</span> className=<span class="s">"flex-1"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">Routes</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">Route</span> path=<span class="s">"/"</span>            element={&lt;<span class="f">HomePage</span> /&gt;} /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">Route</span> path=<span class="s">"/catalogue"</span>   element={&lt;<span class="f">CataloguePage</span> /&gt;} /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">Route</span> path=<span class="s">"/produit/:id"</span> element={&lt;<span class="f">ProductPage</span> /&gt;} /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">Route</span> path=<span class="s">"/panier"</span>      element={&lt;<span class="f">CartPage</span> /&gt;} /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">Route</span> path=<span class="s">"/analytics"</span>   element={&lt;<span class="f">AnalyticsPage</span> /&gt;} /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/<span class="f">Routes</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/<span class="f">main</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="f">Footer</span> /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/<span class="f">div</span>&gt;<br>
+&nbsp;&nbsp;)<br>
+}
+      </div>
+    </div>
+  </div>
+
+  <!-- Health check -->
+  <h2 class="section-title">🩺 Le point de contrôle <code>/api/health</code> <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon green">🩺</div>
+      <div><div class="card-title">Vérifier que tout tourne</div></div>
+    </div>
+    <p>Avant de coder quoi que ce soit, vérifie toujours ce endpoint. Il indique si le serveur Express est en vie et si la base de données est connectée.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/app.js (extrait)</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+app.<span class="f">get</span>(<span class="s">'/api/health'</span>, (req, res) =&gt; {<br>
+&nbsp;&nbsp;<span class="k">const</span> mongoose = <span class="f">require</span>(<span class="s">'mongoose'</span>)<br>
+&nbsp;&nbsp;res.<span class="f">json</span>({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">success</span>: <span class="k">true</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">data</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">status</span>: <span class="s">'ok'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">phase</span>: <span class="s">'mongodb'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">db</span>: mongoose.connection.readyState === <span class="n">1</span> ? <span class="s">'connecté'</span> : <span class="s">'déconnecté'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;})<br>
+})
+      </div>
+    </div>
+    <div class="result-panel">
+      <span class="ok">✓ Réponse attendue :</span><br>
+      {<br>
+      &nbsp;&nbsp;"<span class="key">success</span>": <span class="num">true</span>,<br>
+      &nbsp;&nbsp;"<span class="key">data</span>": {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;"<span class="key">status</span>": "<span class="val">ok</span>",<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;"<span class="key">phase</span>": "<span class="val">mongodb</span>",<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;"<span class="key">db</span>": "<span class="val">connecté</span>"<br>
+      &nbsp;&nbsp;}<br>
+      }
+    </div>
+  </div>
+
+</div><!-- /tab-archi -->
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  TAB — INSTALLATION                                               -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div id="tab-install" class="tab-content">
+
+  <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">📦</div>
+    <h1>Installation du <span>projet</span></h1>
+    <p>Trois étapes : cloner le dépôt, installer les dépendances des deux sous-projets, configurer les variables d'environnement. Compte environ <strong>5 minutes</strong>.</p>
+  </div>
+
+  <!-- Prérequis -->
+  <h2 class="section-title">✅ Prérequis <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon amber">⚙️</div>
+      <div><div class="card-title">Ce dont tu as besoin avant de commencer</div></div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <h3 class="sub-title">Logiciels obligatoires</h3>
+        <ul class="checklist">
+          <li><strong>Node.js 18+</strong> — <code>node --version</code> doit afficher <code>v18.x</code> ou plus</li>
+          <li><strong>Git</strong> — <code>git --version</code></li>
+          <li><strong>Un terminal</strong> — PowerShell, Git Bash, ou Terminal VSCode</li>
+          <li><strong>VSCode</strong> (recommandé) avec l'extension ES7 React Snippets</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="sub-title">Pour les phases suivantes (pas encore)</h3>
+        <ul class="checklist">
+          <li class="warn">Docker Desktop — pour Redis, Cassandra, Neo4j</li>
+          <li class="warn">Un compte MongoDB Atlas (gratuit) — pour Phase 1</li>
+        </ul>
+      </div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash · vérification rapide</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+node --version   <span class="c"># → v20.x.x ou v22.x.x</span><br>
+npm --version    <span class="c"># → 9.x.x ou plus</span><br>
+git --version    <span class="c"># → git version 2.x.x</span>
+      </div>
+    </div>
+    <div class="box-warning"><strong>Node 16 ou moins ?</strong> Certaines dépendances (Vite 5, Mongoose 9) nécessitent Node 18 minimum. Installe la dernière LTS depuis <code>nodejs.org</code>.</div>
+  </div>
+
+  <!-- Étape 1 : Cloner -->
+  <h2 class="section-title">Étape 1 — Cloner le dépôt <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon purple">📥</div>
+      <div><div class="card-title">Récupérer le code source</div></div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c"># Cloner le projet (remplace l'URL par celle que le formateur t'a donnée)</span><br>
+git clone &lt;URL-du-repo&gt; sportshopy<br>
+cd sportshopy<br><br>
+<span class="c"># Vérifier qu'on est bien sur la branche main</span><br>
+git log --oneline -3<br>
+<span class="c"># Tu dois voir : merge(base), remise à zéro, init...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Étape 2 : npm install serveur -->
+  <h2 class="section-title">Étape 2 — Installer les dépendances <span class="line"></span></h2>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon cyan">🖥️</div>
+        <div>
+          <div class="card-title">Dépendances serveur</div>
+          <div class="card-subtitle">dans server/</div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash · Terminal 1</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <div class="code-body">
+cd server<br>
+npm install<br><br>
+<span class="c"># Vérifie les packages installés</span><br>
+npm list --depth=0<br>
+<span class="c"># cors, dotenv, express, mongoose</span>
+        </div>
+      </div>
+      <h3 class="sub-title">Packages installés</h3>
+      <table class="compare-table">
+        <tr><th>Package</th><th>Rôle</th></tr>
+        <tr><td>express</td><td>Framework HTTP</td></tr>
+        <tr><td>cors</td><td>Autorise les requêtes cross-origin depuis :5173</td></tr>
+        <tr><td>dotenv</td><td>Charge le fichier .env</td></tr>
+        <tr><td>mongoose</td><td>ODM MongoDB (Phase 1)</td></tr>
+        <tr><td>nodemon</td><td>Redémarre le serveur à chaque sauvegarde (devDep)</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">⚛️</div>
+        <div>
+          <div class="card-title">Dépendances client</div>
+          <div class="card-subtitle">dans client/</div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash · Terminal 2</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <div class="code-body">
+<span class="c"># Depuis la racine du projet</span><br>
+cd client<br>
+npm install<br><br>
+<span class="c"># Vérifie les packages installés</span><br>
+npm list --depth=0<br>
+<span class="c"># react, react-dom, react-router-dom, vite...</span>
+        </div>
+      </div>
+      <h3 class="sub-title">Packages installés</h3>
+      <table class="compare-table">
+        <tr><th>Package</th><th>Rôle</th></tr>
+        <tr><td>react + react-dom</td><td>Librairie UI</td></tr>
+        <tr><td>react-router-dom</td><td>Navigation entre pages</td></tr>
+        <tr><td>vite</td><td>Serveur de dev + bundler</td></tr>
+        <tr><td>tailwindcss</td><td>Framework CSS utilitaire</td></tr>
+        <tr><td>@vitejs/plugin-react</td><td>Support JSX dans Vite</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Étape 3 : .env -->
+  <h2 class="section-title">Étape 3 — Configurer le <code>.env</code> <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon amber">🔐</div>
+      <div>
+        <div class="card-title">Variables d'environnement</div>
+        <div class="card-subtitle">server/.env (à créer depuis server/.env.example)</div>
+      </div>
+    </div>
+    <p>Le fichier <code>.env</code> contient les secrets et la config locale. Il n'est <strong>jamais commité</strong> (il est dans le <code>.gitignore</code>). Tu le crées une fois sur ta machine.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash · créer le .env</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c"># Depuis le dossier server/</span><br>
+cp ../.env.example .env<br>
+<span class="c"># Puis édite le fichier .env avec ton éditeur</span>
+      </div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">.env · server/.env</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c"># ── Serveur ────────────────────────────────────────</span><br>
+<span class="p">PORT</span>=3001<br>
+<span class="p">NODE_ENV</span>=development<br><br>
+<span class="c"># ── MongoDB Atlas (Phase 1) ──────────────────────────</span><br>
+<span class="p">MONGODB_URI</span>=mongodb+srv://&lt;user&gt;:&lt;password&gt;@&lt;cluster&gt;.mongodb.net/sportshopy<br><br>
+<span class="c"># ── Redis (Phase 2) ──────────────────────────────────</span><br>
+<span class="c"># REDIS_URL=redis://localhost:6379</span><br><br>
+<span class="c"># ── Cassandra (Phase 3) ──────────────────────────────</span><br>
+<span class="c"># CASSANDRA_CONTACT_POINTS=localhost</span><br>
+<span class="c"># CASSANDRA_KEYSPACE=sportshopy</span>
+      </div>
+    </div>
+    <div class="box-danger"><strong>🚫 Ne jamais committer le .env !</strong> Il contient ton mot de passe Atlas. Vérifie avec <code>git status</code> — le fichier <code>.env</code> doit apparaître en rouge (non suivi) ou ne pas apparaître du tout.</div>
+    <div class="box-info"><strong>Pour l'instant</strong>, tu peux laisser <code>MONGODB_URI</code> vide ou avec une valeur factice. Le serveur démarrera mais affichera une erreur de connexion — c'est normal pour la Phase 0. On le remplit au cours suivant (MongoDB).</div>
+  </div>
+
+</div><!-- /tab-install -->
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  TAB — LANCEMENT                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div id="tab-lancement" class="tab-content">
+
+  <div class="progress-track"><div class="progress-fill" style="width:75%"></div></div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">▶️</div>
+    <h1>Lancer le <span>projet en dev</span></h1>
+    <p>Il faut <strong>deux terminaux simultanés</strong> — un pour le serveur, un pour le client. Les deux doivent tourner en même temps pour que l'application fonctionne.</p>
+  </div>
+
+  <!-- Deux terminaux -->
+  <h2 class="section-title">🖥️ Deux terminaux, toujours <span class="line"></span></h2>
+  <div class="box-cyan"><strong>Ouvre deux onglets dans ton terminal</strong> (ou deux panneaux dans VSCode avec <code>Ctrl+`</code> → Split Terminal). Ne ferme pas le terminal du serveur quand tu travailles — les deux doivent rester ouverts.</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon cyan">1️⃣</div>
+        <div>
+          <div class="card-title">Terminal 1 — Serveur</div>
+          <div class="card-subtitle">À garder ouvert en permanence</div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="terminal-dots"><span></span><span></span><span></span></div>
+          <span class="terminal-title">Terminal 1 — server/</span>
+        </div>
+        <div class="terminal-body">
+<span class="t-comment"># depuis la racine du projet</span><br>
+<span class="t-prompt">$</span> <span class="t-cmd">cd server</span><br>
+<span class="t-prompt">$</span> <span class="t-cmd">npm run dev</span><br><br>
+<span class="t-out">[nodemon] starting `node server.js`</span><br>
+<span class="t-ok">✅ MongoDB connecté : xxx.mongodb.net</span><br>
+<span class="t-ok">🚀 SportShopy API — http://localhost:3001/api/health</span>
+        </div>
+      </div>
+      <div class="box-success"><span class="live-dot"></span><strong>Nodemon</strong> surveille les fichiers <code>server/</code> et redémarre automatiquement à chaque sauvegarde. Tu n'as pas besoin de relancer manuellement.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon blue">2️⃣</div>
+        <div>
+          <div class="card-title">Terminal 2 — Client</div>
+          <div class="card-subtitle">À garder ouvert en permanence</div>
+        </div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="terminal-dots"><span></span><span></span><span></span></div>
+          <span class="terminal-title">Terminal 2 — client/</span>
+        </div>
+        <div class="terminal-body">
+<span class="t-comment"># depuis la racine du projet</span><br>
+<span class="t-prompt">$</span> <span class="t-cmd">cd client</span><br>
+<span class="t-prompt">$</span> <span class="t-cmd">npm run dev</span><br><br>
+&nbsp;&nbsp;<span class="t-out">VITE v5.x.x  ready in 312ms</span><br><br>
+&nbsp;&nbsp;➜  <span class="t-ok">Local:</span>   http://localhost:5173/<br>
+&nbsp;&nbsp;➜  Network: use --host to expose
+        </div>
+      </div>
+      <div class="box-info">Ouvre <code>http://localhost:5173</code> dans ton navigateur — c'est là que tu verras l'application React. Pas le port 3001 !</div>
+    </div>
+  </div>
+
+  <!-- Vérifications -->
+  <h2 class="section-title">✅ Checklist de vérification <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon green">🔍</div>
+      <div><div class="card-title">Tester que tout fonctionne</div></div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num cyan-bg">1</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-title">Tester le serveur directement</div>
+          <div class="step-desc">
+            Ouvre <code>http://localhost:3001/api/health</code> dans le navigateur ou avec curl.
+          </div>
+          <div class="terminal" style="margin-top:10px">
+            <div class="terminal-bar">
+              <div class="terminal-dots"><span></span><span></span><span></span></div>
+              <span class="terminal-title">curl</span>
+            </div>
+            <div class="terminal-body">
+<span class="t-prompt">$</span> <span class="t-cmd">curl http://localhost:3001/api/health</span><br>
+<span class="t-ok">{"success":true,"data":{"status":"ok","phase":"mongodb","db":"connecté"}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num cyan-bg">2</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-title">Tester le proxy depuis React</div>
+          <div class="step-desc">
+            Ouvre les DevTools du navigateur (F12 → onglet Network), puis navigue sur
+            <code>http://localhost:5173</code>. Les requêtes <code>/api/health</code>
+            doivent apparaître avec un statut <strong>200</strong>.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num cyan-bg">3</div>
+          <div class="step-connector"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-title">Naviguer entre les pages</div>
+          <div class="step-desc">
+            Clique sur les liens du Header — chaque page doit s'afficher sans rechargement
+            complet (React Router côté client). Teste :
+            <code>/</code> · <code>/catalogue</code> · <code>/panier</code> · <code>/analytics</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line">
+          <div class="step-num cyan-bg">4</div>
+        </div>
+        <div class="step-content">
+          <div class="step-title">Vérifier le hot-reload</div>
+          <div class="step-desc">
+            Ouvre un composant React (ex: <code>client/src/components/common/Header.jsx</code>),
+            change un texte, sauvegarde. Le navigateur doit se mettre à jour
+            <strong>instantanément sans F5</strong> grâce au HMR (Hot Module Replacement) de Vite.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Erreurs courantes -->
+  <h2 class="section-title">🐛 Erreurs courantes <span class="line"></span></h2>
+  <div class="card">
+    <table class="compare-table">
+      <tr>
+        <th>Erreur</th>
+        <th>Cause probable</th>
+        <th>Solution</th>
+      </tr>
+      <tr>
+        <td><code>ECONNREFUSED :3001</code></td>
+        <td>Le serveur Express ne tourne pas</td>
+        <td>Lancer <code>npm run dev</code> dans <code>server/</code></td>
+      </tr>
+      <tr>
+        <td><code>Cannot find module 'express'</code></td>
+        <td><code>npm install</code> non fait dans server/</td>
+        <td><code>cd server &amp;&amp; npm install</code></td>
+      </tr>
+      <tr>
+        <td><code>MONGODB_URI manquant dans .env</code></td>
+        <td>Fichier .env absent ou incomplet</td>
+        <td>Créer <code>server/.env</code> depuis <code>.env.example</code></td>
+      </tr>
+      <tr>
+        <td>Page blanche sur :5173</td>
+        <td>Erreur JavaScript dans la console</td>
+        <td>Ouvrir F12 → Console et lire l'erreur</td>
+      </tr>
+      <tr>
+        <td>Port déjà utilisé</td>
+        <td>Une ancienne instance tourne</td>
+        <td>Chercher et tuer le processus sur le port</td>
+      </tr>
+    </table>
+    <div class="code-block" style="margin-top:16px">
+      <div class="code-header"><span class="code-lang">bash · tuer un processus sur un port</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c"># Windows (PowerShell)</span><br>
+netstat -ano | findstr :3001<br>
+taskkill /PID &lt;PID&gt; /F<br><br>
+<span class="c"># macOS / Linux</span><br>
+lsof -ti:3001 | xargs kill
+      </div>
+    </div>
+  </div>
+
+</div><!-- /tab-lancement -->
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  TAB — RECAP                                                      -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div id="tab-recap" class="tab-content">
+
+  <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">📋</div>
+    <h1>Phase 0 — <span>Récap</span></h1>
+    <p>La base est en place. Avant de passer à MongoDB, vérifie que tu peux répondre à toutes les questions ci-dessous — c'est le minimum pour la suite.</p>
+  </div>
+
+  <!-- Checklist finale -->
+  <h2 class="section-title">✅ Checklist avant MongoDB <span class="line"></span></h2>
+  <div class="card">
+    <ul class="checklist" style="gap:14px">
+      <li>Je sais quelle commande lancer dans quel dossier pour démarrer le serveur</li>
+      <li>Je sais quelle commande lancer dans quel dossier pour démarrer le client</li>
+      <li>J'ai vérifié que <code>GET /api/health</code> répond avec <code>{"success":true}</code></li>
+      <li>J'ai ouvert <code>http://localhost:5173</code> et navigué entre les pages sans erreur</li>
+      <li>Je comprends pourquoi le proxy Vite existe et ce qu'il fait</li>
+      <li>J'ai créé mon fichier <code>server/.env</code> depuis <code>.env.example</code></li>
+      <li class="warn">Je n'ai pas commité le fichier <code>.env</code></li>
+      <li class="warn">J'ai Docker Desktop installé (pour les phases suivantes)</li>
+    </ul>
+  </div>
+
+  <!-- Ce qui est en place -->
+  <h2 class="section-title">📦 Ce qui est en place (Phase 0) <span class="line"></span></h2>
+  <div class="grid-3">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-icon cyan" style="margin-bottom:12px">🖥️</div>
+      <div class="card-title" style="margin-bottom:8px">Serveur Express</div>
+      <ul class="checklist">
+        <li>Route <code>/api/health</code></li>
+        <li>CORS configuré</li>
+        <li>Middleware d'erreur</li>
+        <li>Serve <code>/img</code> statique</li>
+      </ul>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-icon blue" style="margin-bottom:12px">⚛️</div>
+      <div class="card-title" style="margin-bottom:8px">Client React</div>
+      <ul class="checklist">
+        <li>5 pages (placeholders)</li>
+        <li>Header + Footer</li>
+        <li>React Router</li>
+        <li>Proxy Vite configuré</li>
+      </ul>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-icon purple" style="margin-bottom:12px">🎨</div>
+      <div class="card-title" style="margin-bottom:8px">Style & Design</div>
+      <ul class="checklist">
+        <li>Tailwind CSS</li>
+        <li>Variables CSS</li>
+        <li>Polices Inter + Bebas</li>
+        <li>Responsive de base</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Roadmap -->
+  <h2 class="section-title">🗺️ Où on en est dans le cours <span class="line"></span></h2>
+  <div class="card">
+    <div class="phase-row">
+      <div class="phase-num done">0</div>
+      <div>
+        <div class="phase-name">Base applicative</div>
+        <div class="phase-sub">Express + React + Vite + Tailwind — scaffold minimal</div>
+      </div>
+      <div class="phase-tag"><span class="tag green">✓ Fait</span></div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-num current">1</div>
+      <div>
+        <div class="phase-name">MongoDB Atlas · Modèle Document</div>
+        <div class="phase-sub">Catalogue produits — filtres, recherche, seed</div>
+      </div>
+      <div class="phase-tag"><span class="tag cyan">→ Prochain</span></div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-num next">2</div>
+      <div>
+        <div class="phase-name">Redis · Modèle Clé-Valeur</div>
+        <div class="phase-sub">Panier d'achat — sessions, TTL</div>
+      </div>
+      <div class="phase-tag"><span class="tag amber">À venir</span></div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-num next">3</div>
+      <div>
+        <div class="phase-name">Cassandra · Modèle Colonne</div>
+        <div class="phase-sub">Analytics — séries temporelles, ventes</div>
+      </div>
+      <div class="phase-tag"><span class="tag amber">À venir</span></div>
+    </div>
+    <div class="phase-row">
+      <div class="phase-num next">4</div>
+      <div>
+        <div class="phase-name">Neo4j · Modèle Graphe</div>
+        <div class="phase-sub">Recommandations — produits similaires</div>
+      </div>
+      <div class="phase-tag"><span class="tag amber">À venir</span></div>
+    </div>
+  </div>
+
+  <!-- Prochain cours -->
+  <h2 class="section-title">➡️ Prochain cours — MongoDB <span class="line"></span></h2>
+  <div class="card" style="border-color:rgba(0,237,100,.2);background:linear-gradient(135deg,var(--bg2),rgba(0,100,40,.04))">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(0,237,100,.12)">🍃</div>
+      <div>
+        <div class="card-title" style="color:#00ed64">Phase 1 · MongoDB Atlas · Modèle Document</div>
+        <div class="card-subtitle">Branche : <code>feature/mongodb</code></div>
+      </div>
+    </div>
+    <p>Tu vas créer un cluster <strong>MongoDB Atlas gratuit</strong>, modéliser le catalogue produits avec Mongoose, écrire un script de seed, et connecter le frontend React aux données réelles.</p>
+    <div class="mini-cards">
+      <div class="mini-card"><span class="icon">☁️</span><div><strong>MongoDB Atlas</strong>Cluster M0 gratuit</div></div>
+      <div class="mini-card"><span class="icon">🦴</span><div><strong>Mongoose</strong>ODM + validation</div></div>
+      <div class="mini-card"><span class="icon">🌱</span><div><strong>Seed script</strong>20 produits</div></div>
+      <div class="mini-card"><span class="icon">🔍</span><div><strong>Filtres & tri</strong>API REST</div></div>
+    </div>
+    <div class="box-cyan"><strong>Prérequis pour la prochaine séance :</strong> Crée ton compte MongoDB Atlas sur <code>mongodb.com/atlas</code> avant d'arriver — la création du cluster prend quelques minutes et on ne veut pas perdre de temps en cours.</div>
+  </div>
+
+</div><!-- /tab-recap -->
+
+</main>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
