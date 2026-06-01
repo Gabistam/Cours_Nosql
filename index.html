@@ -840,7 +840,8 @@ body {
     <button class="tab-btn" onclick="showSection(2)">1.3 Les 4 modèles</button>
     <button class="tab-btn" onclick="showSection(3)">1.4 Modèle Document</button>
     <button class="tab-btn" onclick="showSection(4)">1.5 MongoDB en détail</button>
-    <button class="tab-btn quiz-tab" onclick="showSection(5); initQuiz()">Quiz ✦</button>
+    <button class="tab-btn quiz-tab" onclick="showSection(5); initQuiz(5)">Quiz 1 — Fondamentaux ✦</button>
+    <button class="tab-btn quiz-tab" onclick="showSection(6); initQuiz(6)">Quiz 2 — Document & MongoDB ✦</button>
   </div>
 </nav>
 
@@ -1411,47 +1412,78 @@ db.produits.find({ <span class="k">$and</span><span class="p">:</span> [
   </section>
   </section>
 
-  <!-- ─── SECTION QUIZ ─── -->
+  <!-- ─── SECTION QUIZ 1 ─── -->
   <section class="section" id="s5">
     <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
     <div class="chapter-header">
-      <div class="chapter-num">Quiz</div>
-      <h2>Teste tes <em>connaissances</em></h2>
+      <div class="chapter-num">Quiz 1</div>
+      <h2>Fondamentaux <em>NoSQL</em></h2>
     </div>
     <p class="section-intro">
-      10 questions tirées au sort depuis une banque de questions.
-      Sélectionne ta réponse puis valide. Tu ne pourras pas revenir en arrière. Bonne chance.
+      10 questions sur les <strong>chapitres 1.1, 1.2 et 1.3</strong> — Contexte, histoire, comparaison SQL/NoSQL et panorama des 4 modèles.
+      Tirage aléatoire à chaque session. Une question à la fois, pas de retour en arrière.
     </p>
-
-    <div class="quiz-wrap">
-      <!-- QUIZ IN PROGRESS -->
-      <div id="quiz-game">
+    <div class="quiz-wrap" id="quiz-wrap-5">
+      <div class="quiz-game-inner" id="quiz-game-5">
         <div class="quiz-header-bar">
-          <div class="quiz-counter">Question <strong id="q-num">1</strong> / 10</div>
-          <div class="quiz-score-live">Score : <span id="score-live">0</span> / <span id="total-done">0</span></div>
+          <div class="quiz-counter">Question <strong id="q-num-5">1</strong> / 10</div>
+          <div class="quiz-score-live">Score : <span id="score-live-5">0</span> / <span id="total-done-5">0</span></div>
         </div>
-        <div class="quiz-progress"><div class="quiz-progress-fill" id="q-prog" style="width:0%"></div></div>
-
+        <div class="quiz-progress"><div class="quiz-progress-fill" id="q-prog-5" style="width:0%"></div></div>
         <div class="quiz-question-card">
-          <div class="quiz-q-num" id="q-tag">QUESTION 01</div>
-          <div class="quiz-q-text" id="q-text"></div>
+          <div class="quiz-q-num" id="q-tag-5">QUESTION 01</div>
+          <div class="quiz-q-text" id="q-text-5"></div>
         </div>
-
-        <div class="quiz-options" id="q-options"></div>
-        <div class="quiz-feedback" id="q-feedback"></div>
-
+        <div class="quiz-options" id="q-options-5"></div>
+        <div class="quiz-feedback" id="q-feedback-5"></div>
         <div class="quiz-actions">
-          <button class="quiz-btn quiz-btn-validate" id="btn-validate" onclick="validateAnswer()" disabled>Valider →</button>
-          <button class="quiz-btn quiz-btn-next" id="btn-next" onclick="nextQuestion()">Question suivante →</button>
+          <button class="quiz-btn quiz-btn-validate" id="btn-validate-5" onclick="validateAnswer(5)" disabled>Valider →</button>
+          <button class="quiz-btn quiz-btn-next" id="btn-next-5" onclick="nextQuestion(5)">Question suivante →</button>
         </div>
       </div>
-
-      <!-- RESULT SCREEN -->
-      <div class="quiz-result" id="quiz-result">
-        <div class="quiz-result-score" id="res-score"></div>
+      <div class="quiz-result" id="quiz-result-5">
+        <div class="quiz-result-score" id="res-score-5"></div>
         <div class="quiz-result-label">points sur 10</div>
-        <div class="quiz-result-msg" id="res-msg"></div>
-        <button class="quiz-restart-btn" onclick="restartQuiz()">↺ Recommencer (nouveau tirage)</button>
+        <div class="quiz-result-msg" id="res-msg-5"></div>
+        <button class="quiz-restart-btn" onclick="restartQuiz(5)">↺ Nouveau tirage</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── SECTION QUIZ 2 ─── -->
+  <section class="section" id="s6">
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="chapter-header">
+      <div class="chapter-num">Quiz 2</div>
+      <h2>Modèle <em>Document</em> & MongoDB</h2>
+    </div>
+    <p class="section-intro">
+      10 questions sur les <strong>chapitres 1.4 et 1.5</strong> — Modèle document, modélisation, requêtes MongoDB et écosystème.
+      Tirage aléatoire à chaque session. Une question à la fois, pas de retour en arrière.
+    </p>
+    <div class="quiz-wrap" id="quiz-wrap-6">
+      <div class="quiz-game-inner" id="quiz-game-6">
+        <div class="quiz-header-bar">
+          <div class="quiz-counter">Question <strong id="q-num-6">1</strong> / 10</div>
+          <div class="quiz-score-live">Score : <span id="score-live-6">0</span> / <span id="total-done-6">0</span></div>
+        </div>
+        <div class="quiz-progress"><div class="quiz-progress-fill" id="q-prog-6" style="width:0%"></div></div>
+        <div class="quiz-question-card">
+          <div class="quiz-q-num" id="q-tag-6">QUESTION 01</div>
+          <div class="quiz-q-text" id="q-text-6"></div>
+        </div>
+        <div class="quiz-options" id="q-options-6"></div>
+        <div class="quiz-feedback" id="q-feedback-6"></div>
+        <div class="quiz-actions">
+          <button class="quiz-btn quiz-btn-validate" id="btn-validate-6" onclick="validateAnswer(6)" disabled>Valider →</button>
+          <button class="quiz-btn quiz-btn-next" id="btn-next-6" onclick="nextQuestion(6)">Question suivante →</button>
+        </div>
+      </div>
+      <div class="quiz-result" id="quiz-result-6">
+        <div class="quiz-result-score" id="res-score-6"></div>
+        <div class="quiz-result-label">points sur 10</div>
+        <div class="quiz-result-msg" id="res-msg-6"></div>
+        <button class="quiz-restart-btn" onclick="restartQuiz(6)">↺ Nouveau tirage</button>
       </div>
     </div>
   </section>
@@ -1459,6 +1491,9 @@ db.produits.find({ <span class="k">$and</span><span class="p">:</span> [
 </main>
 
 <script>
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
 const tabs = document.querySelectorAll('.tab-btn');
 const sections = document.querySelectorAll('.section');
 let current = 0;
@@ -1469,123 +1504,195 @@ function showSection(idx) {
   current = idx;
   sections[current].classList.add('active');
   tabs[current].classList.add('active');
-  tabs[current].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  tabs[current].scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
+  window.scrollTo({ top:0, behavior:'smooth' });
 }
 
-/* ═══════════════════════════════════════════════
-   QUIZ ENGINE
-═══════════════════════════════════════════════ */
-
-// ── Banque de 16 questions (tirage de 10 à chaque session)
-const QUESTION_BANK = [
+/* ══════════════════════════════════════════
+   BANQUE Q1 — Contexte, Histoire, SQL vs NoSQL, 4 Modèles (14 questions)
+══════════════════════════════════════════ */
+const BANK_Q1 = [
   {
-    q: "Quelle est la signification de l'acronyme NoSQL telle qu'elle est utilisée aujourd'hui ?",
+    q: "En quelle année le terme 'NoSQL' a-t-il été utilisé pour la première fois ?",
+    correct: "1998, par Carlo Strozzi",
+    wrong: ["2004, par Google", "2009, lors du meetup de San Francisco", "2001, par Amazon"],
+    explain: "Carlo Strozzi utilise le terme <strong>NoSQL en 1998</strong> pour désigner une base open source sans SQL. La définition 'Not Only SQL' ne s'imposera qu'en 2009."
+  },
+  {
+    q: "Que signifie aujourd'hui l'acronyme NoSQL ?",
     correct: "Not Only SQL",
     wrong: ["No Structured Query Language", "Non-relational Open Source Query Language", "No Sequential Query Logic"],
-    explain: "Depuis 2009, NoSQL signifie <strong>Not Only SQL</strong> — ce n'est pas un rejet du SQL, mais une extension des possibilités de stockage au-delà du modèle relationnel seul."
+    explain: "Depuis 2009, NoSQL signifie <strong>Not Only SQL</strong> — une extension des possibilités de stockage au-delà du modèle relationnel, pas un rejet du SQL."
   },
   {
-    q: "Quel document publié par Amazon en 2007 a posé les bases du NoSQL distribué ?",
-    correct: "Dynamo",
-    wrong: ["Aurora", "RedShift", "SimpleDB"],
-    explain: "<strong>Dynamo</strong> est le système de stockage distribué conçu par Amazon pour tenir la charge des soldes. Son article de recherche a influencé directement des bases comme Cassandra et Riak."
+    q: "Quel document de recherche publié par Amazon en 2007 a influencé directement l'architecture NoSQL moderne ?",
+    correct: "Le papier sur Dynamo",
+    wrong: ["Le papier sur Aurora", "Le papier sur SimpleDB", "Le papier sur RedShift"],
+    explain: "<strong>Dynamo</strong> d'Amazon (2007) a posé les bases du NoSQL distribué : scalabilité horizontale, tolérance aux pannes, cohérence éventuelle. Il a influencé Cassandra, Riak, et bien d'autres."
   },
   {
-    q: "Dans le modèle document, comment appelle-t-on l'équivalent d'une table SQL ?",
-    correct: "Une collection",
-    wrong: ["Un namespace", "Un répertoire", "Un registre"],
-    explain: "En NoSQL documentaire, on parle de <strong>collection</strong>. Contrairement à une table SQL, une collection n'impose pas de schéma fixe : les documents peuvent avoir des structures différentes."
-  },
-  {
-    q: "Quel format de données MongoDB utilise-t-il en interne pour stocker les documents ?",
-    correct: "BSON (Binary JSON)",
-    wrong: ["XML compressé", "Protobuf", "MessagePack"],
-    explain: "<strong>BSON</strong> (Binary JSON) est une extension binaire de JSON qui ajoute des types comme les dates natives, les ObjectId et les entiers 32/64 bits, tout en étant optimisé pour la lecture rapide."
+    q: "Quelle entreprise a publié le papier fondateur sur Bigtable en 2006, influençant les bases NoSQL orientées colonnes ?",
+    correct: "Google",
+    wrong: ["Facebook", "Microsoft", "Yahoo"],
+    explain: "<strong>Google</strong> publie le papier sur <strong>Bigtable</strong> en 2006, décrivant un système de stockage distribué structuré par colonnes. Il inspirera HBase et Cassandra."
   },
   {
     q: "Quelle propriété ACID garantit qu'une transaction est entièrement exécutée ou entièrement annulée ?",
-    correct: "Atomicité",
-    wrong: ["Cohérence", "Isolation", "Durabilité"],
-    explain: "<strong>L'atomicité</strong> garantit le principe du 'tout ou rien' : si une partie d'une transaction échoue, toutes ses opérations sont annulées (rollback)."
-  },
-  {
-    q: "Quelle stratégie de modélisation MongoDB consiste à intégrer les données liées directement dans le document principal ?",
-    correct: "L'embedding (imbrication)",
-    wrong: ["Le referencing (référence)", "La normalisation", "Le sharding"],
-    explain: "<strong>L'embedding</strong> consiste à imbriquer des sous-documents directement dans le document parent. Avantage : une seule requête pour tout récupérer. Inconvénient : documents potentiellement volumineux."
-  },
-  {
-    q: "Quel est le cas d'usage typique du modèle Clé-Valeur dans l'application SportShop ?",
-    correct: "La gestion du panier et des sessions",
-    wrong: ["Le catalogue de produits", "Le système de recommandations", "L'analyse des ventes"],
-    explain: "Le modèle <strong>Clé-Valeur</strong> (Redis) est idéal pour le panier et les sessions : accès ultra-rapide par clé unique, données en mémoire, expiration automatique via TTL."
-  },
-  {
-    q: "Quelle base de données est associée au modèle Graphe dans le panorama NoSQL ?",
-    correct: "Neo4j",
-    wrong: ["Cassandra", "CouchDB", "Elasticsearch"],
-    explain: "<strong>Neo4j</strong> est la base orientée graphe de référence. Elle modélise les données comme des nœuds reliés par des relations typées, parfait pour les réseaux sociaux et les systèmes de recommandation."
+    correct: "L'Atomicité",
+    wrong: ["La Cohérence", "L'Isolation", "La Durabilité"],
+    explain: "<strong>L'atomicité</strong> (le A de ACID) garantit le principe du 'tout ou rien' : si une partie de la transaction échoue, toutes ses opérations sont annulées via rollback."
   },
   {
     q: "Que signifie 'scalabilité horizontale' dans le contexte NoSQL ?",
     correct: "Ajouter des serveurs en parallèle pour répartir la charge",
-    wrong: ["Augmenter la RAM et le CPU d'un seul serveur", "Optimiser les requêtes SQL existantes", "Compresser les données pour gagner de l'espace"],
-    explain: "La <strong>scalabilité horizontale</strong> (scale-out) consiste à ajouter des nœuds supplémentaires au cluster. C'est l'approche NoSQL, opposée au scale-up vertical qui consiste à améliorer un seul serveur."
+    wrong: ["Augmenter la RAM et le CPU d'un seul serveur", "Compresser les données pour gagner de l'espace disque", "Optimiser les index d'une base existante"],
+    explain: "La <strong>scalabilité horizontale</strong> (scale-out) consiste à ajouter des nœuds au cluster. Opposée au scale-up vertical (améliorer un seul serveur), c'est l'approche privilégiée par les bases NoSQL."
   },
   {
     q: "Dans le modèle BASE (NoSQL), que signifie 'Eventual Consistency' ?",
-    correct: "Les données seront cohérentes à terme, après un court délai de propagation",
-    wrong: ["Les données sont immédiatement cohérentes sur tous les nœuds", "La base ne garantit aucune cohérence", "Les transactions sont annulées si la cohérence est impossible"],
-    explain: "La <strong>cohérence éventuelle</strong> signifie qu'après une écriture, tous les nœuds du cluster convergeront vers le même état — mais pas instantanément. Acceptable pour les likes, pas pour un virement bancaire."
+    correct: "Les données seront cohérentes à terme, après un délai de propagation entre nœuds",
+    wrong: ["Les données sont immédiatement cohérentes sur tous les nœuds du cluster", "La base ne garantit aucune cohérence des données", "Les transactions sont annulées si la cohérence immédiate est impossible"],
+    explain: "La <strong>cohérence éventuelle</strong> signifie qu'après une écriture, tous les nœuds convergeront vers le même état — mais pas instantanément. Acceptable pour les likes d'un post, inacceptable pour un virement bancaire."
   },
   {
-    q: "Quel type d'index MongoDB permet d'expirer automatiquement un document après un délai défini ?",
-    correct: "Index TTL (Time-To-Live)",
-    wrong: ["Index composé", "Index géospatial", "Index textuel"],
-    explain: "L'<strong>index TTL</strong> supprime automatiquement les documents après le nombre de secondes défini. Parfait pour les tokens d'authentification, les sessions ou les logs temporaires."
+    q: "Quel modèle NoSQL est associé à Redis dans l'application SportShop ?",
+    correct: "Le modèle Clé-Valeur",
+    wrong: ["Le modèle Document", "Le modèle Colonne", "Le modèle Graphe"],
+    explain: "<strong>Redis</strong> est la référence du modèle <strong>Clé-Valeur</strong>. Dans SportShop, il gère le panier et les sessions : accès ultra-rapide par clé unique, données en mémoire, expiration TTL."
   },
   {
-    q: "Quel outil graphique officiel MongoDB permet de visualiser les collections et construire des requêtes sans écrire de code ?",
-    correct: "MongoDB Compass",
-    wrong: ["MongoDB Atlas Charts", "Robo 3T", "MongoDB Shell"],
-    explain: "<strong>MongoDB Compass</strong> est l'interface graphique officielle de MongoDB. Elle permet de parcourir les collections, d'analyser les index et de construire des requêtes de façon visuelle."
+    q: "Quelle base de données de type Graphe est utilisée dans le panorama NoSQL du cours ?",
+    correct: "Neo4j",
+    wrong: ["Cassandra", "CouchDB", "DynamoDB"],
+    explain: "<strong>Neo4j</strong> est la base orientée graphe de référence. Elle modélise des nœuds reliés par des relations typées — idéale pour les réseaux sociaux et les systèmes de recommandation comme dans SportShop."
   },
   {
-    q: "Dans une requête MongoDB, quel opérateur permet de filtrer les documents dont un champ est supérieur à une valeur donnée ?",
-    correct: "$gt",
-    wrong: ["$lt", "$eq", "$ne"],
-    explain: "<strong>$gt</strong> signifie 'greater than' (strictement supérieur à). Pour supérieur ou égal, on utilise <strong>$gte</strong>. Ces opérateurs s'utilisent dans les objets de filtre des requêtes find()."
+    q: "Quelle différence fondamentale distingue le modèle de données SQL du modèle NoSQL ?",
+    correct: "SQL impose un schéma fixe prédéfini, NoSQL permet un schéma flexible ou absent",
+    wrong: ["SQL est plus rapide que NoSQL pour toutes les opérations", "NoSQL ne peut pas stocker des données numériques", "SQL est open source, NoSQL est propriétaire"],
+    explain: "La différence clé : SQL repose sur un <strong>schéma fixe</strong> (tables, colonnes typées à l'avance) tandis que NoSQL offre un <strong>schéma flexible</strong> permettant aux documents d'une même collection d'avoir des structures différentes."
   },
   {
-    q: "Quel est l'avantage principal du schéma flexible du modèle document par rapport au SQL ?",
-    correct: "Les documents d'une même collection peuvent avoir des structures différentes sans migration",
-    wrong: ["Il est impossible de faire des erreurs de typage", "Les requêtes sont automatiquement plus rapides", "La cohérence des données est renforcée"],
-    explain: "Le <strong>schéma flexible</strong> permet d'ajouter, modifier ou supprimer des champs sans migration de base de données. Idéal en phase de développement agile ou pour des catalogues avec des attributs variables."
+    q: "Quelle entreprise a créé Cassandra, la base NoSQL orientée colonnes ?",
+    correct: "Facebook (puis cédé à Apache)",
+    wrong: ["Google", "Amazon", "Netflix"],
+    explain: "<strong>Cassandra</strong> a été développée par <strong>Facebook</strong> pour gérer la boîte de réception de ses utilisateurs, puis cédée à la fondation Apache en 2008. Elle est aujourd'hui utilisée par Netflix, Twitter, et bien d'autres."
   },
   {
-    q: "Quel ODM (Object-Document Mapper) est utilisé pour connecter Node.js à MongoDB ?",
-    correct: "Mongoose",
-    wrong: ["Sequelize", "TypeORM", "Prisma"],
-    explain: "<strong>Mongoose</strong> est l'ODM Node.js de référence pour MongoDB. Il ajoute une couche de Schema sur MongoDB, facilitant la validation des données, les middleware et les opérations CRUD."
+    q: "Quel cas d'usage est le plus adapté à une base de données relationnelle SQL plutôt qu'au NoSQL ?",
+    correct: "Des transactions bancaires avec contraintes d'intégrité strictes",
+    wrong: ["Un catalogue e-commerce avec des milliers de produits aux attributs variables", "Un système de logs générant des millions d'événements par jour", "Un réseau social avec des relations complexes entre utilisateurs"],
+    explain: "Les <strong>transactions bancaires</strong> nécessitent des garanties ACID strictes (cohérence forte, atomicité absolue) que les bases relationnelles gèrent mieux. Le NoSQL sacrifie souvent la cohérence stricte pour la performance et la scalabilité."
   },
   {
-    q: "Dans le concept de 'Polyglot Persistence', que fait-on ?",
-    correct: "On utilise plusieurs types de bases de données selon les besoins de chaque module de l'application",
-    wrong: ["On traduit les requêtes SQL en requêtes NoSQL", "On stocke toutes les données dans une seule base universelle", "On réplique les données entre SQL et NoSQL pour la redondance"],
-    explain: "La <strong>Polyglot Persistence</strong> consiste à choisir la base de données la plus adaptée pour chaque cas d'usage. Exemple SportShop : MongoDB pour le catalogue, Redis pour le panier, Cassandra pour les logs, Neo4j pour les recommandations."
+    q: "Dans l'application SportShop, quel modèle NoSQL est utilisé pour le suivi des ventes et l'analyse des logs ?",
+    correct: "Le modèle Colonne (Cassandra)",
+    wrong: ["Le modèle Document (MongoDB)", "Le modèle Clé-Valeur (Redis)", "Le modèle Graphe (Neo4j)"],
+    explain: "<strong>Cassandra</strong> (modèle Colonne) est utilisé pour les logs et analytiques dans SportShop. Ses performances d'écriture massive et sa capacité à gérer de grandes séries temporelles en font l'outil idéal."
+  },
+  {
+    q: "Que désigne le concept de 'Polyglot Persistence' ?",
+    correct: "Utiliser plusieurs types de bases de données selon les besoins de chaque module",
+    wrong: ["Stocker toutes les données dans une base universelle multimodèle", "Traduire automatiquement les requêtes SQL en requêtes NoSQL", "Répliquer les données entre SQL et NoSQL pour la redondance"],
+    explain: "La <strong>Polyglot Persistence</strong> consiste à choisir la base la plus adaptée pour chaque cas d'usage. SportShop en est l'illustration : MongoDB, Redis, Cassandra et Neo4j coexistent, chacun dans son domaine d'excellence."
   }
 ];
 
-// ── State
-let sessionQuestions = [];
-let currentQ = 0;
-let score = 0;
-let selectedIdx = null;
-let validated = false;
-let quizInitialized = false;
+/* ══════════════════════════════════════════
+   BANQUE Q2 — Modèle Document & MongoDB (14 questions)
+══════════════════════════════════════════ */
+const BANK_Q2 = [
+  {
+    q: "Dans le modèle document, comment appelle-t-on l'équivalent d'une table SQL ?",
+    correct: "Une collection",
+    wrong: ["Un namespace", "Un registre de données", "Un répertoire documentaire"],
+    explain: "En NoSQL documentaire, on parle de <strong>collection</strong>. Contrairement à une table SQL, une collection n'impose pas de schéma fixe : les documents cohabitants peuvent avoir des structures entièrement différentes."
+  },
+  {
+    q: "Quel format binaire MongoDB utilise-t-il en interne pour stocker les documents ?",
+    correct: "BSON (Binary JSON)",
+    wrong: ["MessagePack binaire", "XML compressé en gzip", "Protobuf de Google"],
+    explain: "<strong>BSON</strong> (Binary JSON) est une extension de JSON qui ajoute des types comme les dates natives, ObjectId et entiers 32/64 bits. Il est optimisé pour la lecture et l'écriture rapide par MongoDB."
+  },
+  {
+    q: "Quelle stratégie de modélisation consiste à imbriquer les données liées directement dans le document principal ?",
+    correct: "L'embedding (imbrication)",
+    wrong: ["Le referencing (référencement)", "La normalisation documentaire", "Le sharding par champ"],
+    explain: "<strong>L'embedding</strong> intègre les sous-documents directement dans le parent. Avantage : une seule requête suffit. Inconvénient : documents potentiellement volumineux et mises à jour complexes si les données imbriquées changent souvent."
+  },
+  {
+    q: "Quelle stratégie de modélisation MongoDB stocke des identifiants pointant vers d'autres documents, similaire aux clés étrangères SQL ?",
+    correct: "Le referencing (référencement)",
+    wrong: ["L'embedding (imbrication)", "Le clustering par index", "La dénormalisation forcée"],
+    explain: "<strong>Le referencing</strong> stocke l'_id d'un autre document à la place de ses données. Avantage : pas de duplication, mise à jour centralisée. Inconvénient : plusieurs requêtes nécessaires pour assembler les données."
+  },
+  {
+    q: "Quel type d'index MongoDB supprime automatiquement les documents après un délai défini ?",
+    correct: "L'index TTL (Time-To-Live)",
+    wrong: ["L'index composé multiclé", "L'index géospatial 2dsphere", "L'index textuel full-text"],
+    explain: "L'<strong>index TTL</strong> expire et supprime automatiquement les documents après le nombre de secondes configuré. Idéal pour les tokens d'authentification, sessions ou logs temporaires."
+  },
+  {
+    q: "Quel opérateur MongoDB filtre les documents dont un champ est strictement supérieur à une valeur ?",
+    correct: "$gt",
+    wrong: ["$lt", "$eq", "$ne"],
+    explain: "<strong>$gt</strong> signifie 'greater than' (strictement supérieur). Pour supérieur ou égal, on utilise <strong>$gte</strong>. Ces opérateurs s'écrivent dans l'objet de filtre : <code>{ prix: { $gt: 100 } }</code>"
+  },
+  {
+    q: "Quel outil graphique officiel MongoDB permet de visualiser les collections et construire des requêtes visuellement ?",
+    correct: "MongoDB Compass",
+    wrong: ["MongoDB Atlas Charts", "Robo 3T Studio", "MongoDB Shell (mongosh)"],
+    explain: "<strong>MongoDB Compass</strong> est l'interface graphique officielle. Elle permet de parcourir les collections, analyser les index, profiler les requêtes et construire des filtres sans écrire de code."
+  },
+  {
+    q: "Quel ODM (Object-Document Mapper) est la référence pour connecter Node.js à MongoDB ?",
+    correct: "Mongoose",
+    wrong: ["Sequelize", "TypeORM", "Prisma Client"],
+    explain: "<strong>Mongoose</strong> est l'ODM Node.js de référence pour MongoDB. Il ajoute une couche Schema, validation des données, middleware (hooks) et simplifie les opérations CRUD au-dessus du driver natif."
+  },
+  {
+    q: "Quel est l'avantage principal du schéma flexible du modèle document ?",
+    correct: "Des documents d'une même collection peuvent avoir des structures différentes sans migration",
+    wrong: ["Les requêtes sont automatiquement plus rapides qu'en SQL", "La cohérence des données est plus forte qu'avec ACID", "Il est impossible de créer des erreurs de typage"],
+    explain: "Le <strong>schéma flexible</strong> permet d'ajouter, modifier ou supprimer des champs sans migration. Dans un catalogue e-commerce, un t-shirt et une montre GPS peuvent cohabiter dans la même collection sans champs vides gaspillés."
+  },
+  {
+    q: "Dans MongoDB, quel identifiant unique est automatiquement généré pour chaque document si aucun n'est fourni ?",
+    correct: "Un ObjectId (type BSON spécifique)",
+    wrong: ["Un UUID version 4 standard", "Un entier auto-incrémenté comme en SQL", "Un hash MD5 du contenu du document"],
+    explain: "MongoDB génère automatiquement un <strong>ObjectId</strong> (champ _id) si aucun identifiant n'est fourni. C'est un type BSON de 12 octets encodant timestamp, identifiant machine et compteur — garantissant l'unicité distribuée."
+  },
+  {
+    q: "Quelle entreprise emblématique utilise MongoDB pour stocker les profils de ses membres en tirant parti de la flexibilité du schéma ?",
+    correct: "LinkedIn",
+    wrong: ["Twitter", "Spotify", "Netflix"],
+    explain: "<strong>LinkedIn</strong> utilise MongoDB pour les profils de ses membres. La flexibilité du modèle document est parfaite pour des parcours professionnels très hétérogènes : certains profils ont des dizaines de champs, d'autres très peu."
+  },
+  {
+    q: "Quel service cloud MongoDB permet de déployer une base en quelques clics sur AWS, GCP ou Azure ?",
+    correct: "MongoDB Atlas",
+    wrong: ["MongoDB Stitch", "MongoDB Realm Cloud", "MongoDB Enterprise Advanced"],
+    explain: "<strong>MongoDB Atlas</strong> est le service cloud géré officiel. Il gère le déploiement, le scaling automatique, les backups et la sécurité sur les trois grands clouds. C'est la solution utilisée dans les TP de ce cours."
+  },
+  {
+    q: "Parmi ces cas d'usage, lequel est le MOINS adapté au modèle document ?",
+    correct: "Un système bancaire avec des transactions entre comptes multiples",
+    wrong: ["Un catalogue e-commerce aux attributs de produits variables", "Un CMS gérant des articles aux métadonnées hétérogènes", "Des logs d'événements IoT de structures variées"],
+    explain: "Un <strong>système bancaire</strong> nécessite des transactions multi-entités avec cohérence forte garantie (ACID strict). Le modèle document gère mieux les données auto-contenues. Les JOINs entre comptes et les transactions distribuées sont ses points faibles."
+  },
+  {
+    q: "Dans un pipeline d'agrégation MongoDB, quelle étape permet de filtrer les documents selon des conditions ?",
+    correct: "$match",
+    wrong: ["$filter", "$where", "$select"],
+    explain: "<strong>$match</strong> est l'équivalent du WHERE en SQL dans un pipeline d'agrégation MongoDB. Il filtre les documents avant les étapes suivantes ($group, $sort, $project…). Le placer en premier optimise les performances en réduisant le volume traité."
+  }
+];
 
-// ── Shuffle (Fisher-Yates)
+/* ══════════════════════════════════════════
+   MOTEUR QUIZ (réutilisable par instance)
+══════════════════════════════════════════ */
+const quizState = {};
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -1595,179 +1702,188 @@ function shuffle(arr) {
   return a;
 }
 
-// ── Pad a string to random length (anti-cheat: wrong answers get random padding)
-// Padding adds invisible unicode thin spaces to make lengths unpredictable
-function obfuscateLength(str, isWrong) {
+function obfuscate(str, isWrong) {
   if (!isWrong) return str;
-  const invisibles = ['\u200B', '\u200C', '\u200D', '\uFEFF'];
-  // Random count: 2..18 extra chars, different each call
-  const count = 2 + Math.floor(Math.random() * 17);
-  let suffix = '';
-  for (let i = 0; i < count; i++) {
-    suffix += invisibles[Math.floor(Math.random() * invisibles.length)];
+  const inv = ['\u200B','\u200C','\u200D','\uFEFF'];
+  const n = 3 + Math.floor(Math.random() * 16);
+  let result = str;
+  for (let i = 0; i < n; i++) {
+    const pos = Math.floor(Math.random() * result.length);
+    const ch = inv[Math.floor(Math.random() * inv.length)];
+    result = result.slice(0, pos) + ch + result.slice(pos);
   }
-  // Insert at random position inside string too, not just suffix
-  const pos = Math.floor(Math.random() * str.length);
-  return str.slice(0, pos) + invisibles[Math.floor(Math.random() * invisibles.length)] + str.slice(pos) + suffix;
+  return result;
 }
 
-// ── Build session: pick 10 random questions, shuffle options
-function buildSession() {
-  const pool = shuffle(QUESTION_BANK).slice(0, 10);
-  sessionQuestions = pool.map((q, i) => {
-    const wrongShuffled = shuffle(q.wrong);
-    // Build options array: correct + 3 wrong, positions randomized
+function buildSession(sIdx) {
+  const bank = sIdx === 5 ? BANK_Q1 : BANK_Q2;
+  const pool = shuffle(bank).slice(0, 10);
+  const questions = pool.map(q => {
+    const wrongs = shuffle(q.wrong);
     const raw = [
       { text: q.correct, isCorrect: true },
-      { text: wrongShuffled[0], isCorrect: false },
-      { text: wrongShuffled[1], isCorrect: false },
-      { text: wrongShuffled[2], isCorrect: false }
+      { text: wrongs[0], isCorrect: false },
+      { text: wrongs[1], isCorrect: false },
+      { text: wrongs[2], isCorrect: false }
     ];
-    const shuffled = shuffle(raw);
-    // Obfuscate wrong answer lengths
-    const options = shuffled.map(o => ({
-      display: obfuscateLength(o.text, !o.isCorrect),
+    const opts = shuffle(raw).map(o => ({
+      display: obfuscate(o.text, !o.isCorrect),
       raw: o.text,
       isCorrect: o.isCorrect
     }));
-    return { q: q.q, options, explain: q.explain };
+    return { q: q.q, opts, explain: q.explain };
   });
+  quizState[sIdx] = {
+    questions,
+    current: 0,
+    score: 0,
+    selected: null,
+    validated: false
+  };
 }
 
-// ── Render current question
-function renderQuestion() {
-  const data = sessionQuestions[currentQ];
-  const letters = ['A', 'B', 'C', 'D'];
+function renderQuestion(sIdx) {
+  const s = quizState[sIdx];
+  const data = s.questions[s.current];
+  const letters = ['A','B','C','D'];
+  const n = s.current;
 
-  document.getElementById('q-num').textContent = currentQ + 1;
-  document.getElementById('q-tag').textContent = 'QUESTION ' + String(currentQ + 1).padStart(2, '0');
-  document.getElementById('q-text').textContent = data.q;
-  document.getElementById('q-prog').style.width = ((currentQ) / 10 * 100) + '%';
-  document.getElementById('score-live').textContent = score;
-  document.getElementById('total-done').textContent = currentQ;
+  document.getElementById('q-num-' + sIdx).textContent = n + 1;
+  document.getElementById('q-tag-' + sIdx).textContent = 'QUESTION ' + String(n + 1).padStart(2, '0');
+  document.getElementById('q-text-' + sIdx).textContent = data.q;
+  document.getElementById('q-prog-' + sIdx).style.width = (n / 10 * 100) + '%';
+  document.getElementById('score-live-' + sIdx).textContent = s.score;
+  document.getElementById('total-done-' + sIdx).textContent = n;
 
-  const container = document.getElementById('q-options');
+  const container = document.getElementById('q-options-' + sIdx);
   container.innerHTML = '';
-  data.options.forEach((opt, i) => {
+  data.opts.forEach((opt, i) => {
     const div = document.createElement('div');
     div.className = 'quiz-option';
     div.setAttribute('data-idx', i);
     div.innerHTML = `<div class="opt-radio"></div><span class="opt-letter">${letters[i]}</span><span>${opt.display}</span>`;
-    div.addEventListener('click', () => selectOption(i));
+    div.addEventListener('click', () => selectOption(sIdx, i));
     container.appendChild(div);
   });
 
-  // Reset UI
-  const fb = document.getElementById('q-feedback');
+  const fb = document.getElementById('q-feedback-' + sIdx);
   fb.className = 'quiz-feedback';
   fb.innerHTML = '';
-  selectedIdx = null;
-  validated = false;
-  document.getElementById('btn-validate').disabled = true;
-  document.getElementById('btn-validate').style.display = 'inline-flex';
-  document.getElementById('btn-next').style.display = 'none';
+  s.selected = null;
+  s.validated = false;
+
+  const btnV = document.getElementById('btn-validate-' + sIdx);
+  const btnN = document.getElementById('btn-next-' + sIdx);
+  btnV.disabled = true;
+  btnV.style.display = 'inline-flex';
+  btnN.style.display = 'none';
 }
 
-function selectOption(idx) {
-  if (validated) return;
-  selectedIdx = idx;
-  document.querySelectorAll('.quiz-option').forEach((el, i) => {
+function selectOption(sIdx, idx) {
+  const s = quizState[sIdx];
+  if (s.validated) return;
+  s.selected = idx;
+  document.querySelectorAll('#q-options-' + sIdx + ' .quiz-option').forEach((el, i) => {
     el.classList.toggle('selected', i === idx);
   });
-  document.getElementById('btn-validate').disabled = false;
+  document.getElementById('btn-validate-' + sIdx).disabled = false;
 }
 
-function validateAnswer() {
-  if (selectedIdx === null || validated) return;
-  validated = true;
+function validateAnswer(sIdx) {
+  const s = quizState[sIdx];
+  if (s.selected === null || s.validated) return;
+  s.validated = true;
 
-  const data = sessionQuestions[currentQ];
-  const opts = document.querySelectorAll('.quiz-option');
-  const chosen = data.options[selectedIdx];
-  const isCorrect = chosen.isCorrect;
+  const data = s.questions[s.current];
+  const chosen = data.opts[s.selected];
+  const correct = chosen.isCorrect;
 
+  const opts = document.querySelectorAll('#q-options-' + sIdx + ' .quiz-option');
   opts.forEach((el, i) => {
     el.classList.add('locked');
-    if (data.options[i].isCorrect) el.classList.add('correct-ans');
-    else if (i === selectedIdx && !isCorrect) el.classList.add('wrong-ans');
-    // mark radio
     const radio = el.querySelector('.opt-radio');
-    if (data.options[i].isCorrect) radio.textContent = '✓';
-    else if (i === selectedIdx && !isCorrect) radio.textContent = '×';
+    if (data.opts[i].isCorrect) {
+      el.classList.add('correct-ans');
+      radio.textContent = '✓';
+    } else if (i === s.selected && !correct) {
+      el.classList.add('wrong-ans');
+      radio.textContent = '×';
+    }
   });
 
-  if (isCorrect) score++;
-  document.getElementById('score-live').textContent = score;
-  document.getElementById('total-done').textContent = currentQ + 1;
+  if (correct) s.score++;
+  document.getElementById('score-live-' + sIdx).textContent = s.score;
+  document.getElementById('total-done-' + sIdx).textContent = s.current + 1;
 
-  const fb = document.getElementById('q-feedback');
-  if (isCorrect) {
+  const fb = document.getElementById('q-feedback-' + sIdx);
+  if (correct) {
     fb.className = 'quiz-feedback correct';
     fb.innerHTML = '<strong>✓ Bonne réponse !</strong> ' + data.explain;
   } else {
-    const correctText = data.options.find(o => o.isCorrect).raw;
+    const correctText = data.opts.find(o => o.isCorrect).raw;
     fb.className = 'quiz-feedback wrong';
     fb.innerHTML = '<strong>✗ Incorrect.</strong> La bonne réponse était : <strong>' + correctText + '</strong>.<br>' + data.explain;
   }
 
-  document.getElementById('btn-validate').style.display = 'none';
-  document.getElementById('btn-next').style.display = 'inline-flex';
-  document.getElementById('btn-next').textContent = currentQ < 9 ? 'Question suivante →' : 'Voir les résultats →';
+  const btnV = document.getElementById('btn-validate-' + sIdx);
+  const btnN = document.getElementById('btn-next-' + sIdx);
+  btnV.style.display = 'none';
+  btnN.style.display = 'inline-flex';
+  btnN.textContent = s.current < 9 ? 'Question suivante →' : 'Voir les résultats →';
 }
 
-function nextQuestion() {
-  currentQ++;
-  if (currentQ >= 10) {
-    showResult();
+function nextQuestion(sIdx) {
+  const s = quizState[sIdx];
+  s.current++;
+  if (s.current >= 10) {
+    showResult(sIdx);
   } else {
-    renderQuestion();
+    renderQuestion(sIdx);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
-function showResult() {
-  document.getElementById('quiz-game').style.display = 'none';
-  const res = document.getElementById('quiz-result');
+function showResult(sIdx) {
+  const s = quizState[sIdx];
+  document.getElementById('quiz-game-' + sIdx).style.display = 'none';
+  const res = document.getElementById('quiz-result-' + sIdx);
   res.classList.add('show');
 
-  const pct = score / 10;
+  const pct = s.score / 10;
   let color, msg;
   if (pct >= 0.9) {
     color = 'var(--green)';
-    msg = 'Excellent ! Tu maîtrises les fondamentaux du NoSQL et du modèle document. Tu es prêt pour les TP.';
+    msg = 'Excellent ! Tu maîtrises ce chapitre. Tu es prêt pour les TP.';
   } else if (pct >= 0.7) {
     color = 'var(--blue)';
-    msg = 'Très bon résultat. Quelques points à revoir — retourne sur les sections concernées avant de passer à la pratique.';
+    msg = 'Très bon résultat. Quelques points à revoir — retourne sur les sections concernées.';
   } else if (pct >= 0.5) {
     color = 'var(--amber)';
-    msg = 'Résultat correct, mais des lacunes subsistent. Relis les chapitres 1.2 et 1.4 avant de te lancer dans les TP.';
+    msg = 'Résultat correct, mais des lacunes subsistent. Relis les chapitres avant de passer à la pratique.';
   } else {
     color = 'var(--red)';
-    msg = 'Les bases ne sont pas encore solides. Reprends le support depuis le début — la théorie est le socle de la pratique.';
+    msg = 'Les bases ne sont pas encore solides. Reprends le support depuis le début avant les TP.';
   }
 
-  document.getElementById('res-score').textContent = score + '/10';
-  document.getElementById('res-score').style.color = color;
-  document.getElementById('res-msg').textContent = msg;
+  document.getElementById('res-score-' + sIdx).textContent = s.score + '/10';
+  document.getElementById('res-score-' + sIdx).style.color = color;
+  document.getElementById('res-msg-' + sIdx).textContent = msg;
 }
 
-function restartQuiz() {
-  document.getElementById('quiz-game').style.display = 'block';
-  document.getElementById('quiz-result').classList.remove('show');
-  currentQ = 0;
-  score = 0;
-  selectedIdx = null;
-  validated = false;
-  buildSession();
-  renderQuestion();
+function restartQuiz(sIdx) {
+  document.getElementById('quiz-game-' + sIdx).style.display = 'block';
+  document.getElementById('quiz-result-' + sIdx).classList.remove('show');
+  buildSession(sIdx);
+  renderQuestion(sIdx);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function initQuiz() {
-  if (!quizInitialized) {
-    quizInitialized = true;
-    buildSession();
-    renderQuestion();
+const quizInited = {};
+function initQuiz(sIdx) {
+  if (!quizInited[sIdx]) {
+    quizInited[sIdx] = true;
+    buildSession(sIdx);
+    renderQuestion(sIdx);
   }
 }
 </script>
