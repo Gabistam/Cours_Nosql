@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NoSQL · Graphe · Neo4j (Neo4j Desktop) — SportShopy</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0a0f1a; --bg2:#0f1729; --bg3:#131e35; --bg4:#1a2640;
+  --border:rgba(167,139,250,.15); --border2:rgba(167,139,250,.30);
+  --primary:#3b82f6; --primary-d:#1d4ed8;
+  --green:#10b981; --green-g:linear-gradient(135deg,#10b981,#059669);
+  --amber:#f59e0b; --danger:#ef4444; --cyan:#06b6d4;
+  --neo:#7c3aed; --neo-l:#a78bfa; --neo-g:linear-gradient(135deg,#7c3aed,#6d28d9);
+  --text:#e2e8f0; --text-muted:#94a3b8; --text-dim:#64748b;
+  --radius:12px; --radius-lg:20px;
+}
+html { scroll-behavior:smooth; }
+body { font-family:'Sora',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; font-size:15px; }
+code,pre,.mono { font-family:'JetBrains Mono',monospace; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:var(--bg2); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+
+/* HEADER */
+.site-header { background:linear-gradient(135deg,#0a0f1a,#1e1433 50%,#0a0f1a); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; backdrop-filter:blur(12px); }
+.header-inner { max-width:1200px; margin:0 auto; padding:18px 32px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.header-badge { background:var(--neo); color:#fff; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:6px; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
+.header-title { font-size:1.15rem; font-weight:700; color:#fff; flex:1; }
+.header-title span { color:var(--neo-l); }
+.header-pills { display:flex; gap:8px; flex-wrap:wrap; }
+.pill { font-size:11px; font-weight:500; padding:4px 12px; border-radius:20px; border:1px solid var(--border); color:var(--text-muted); background:rgba(255,255,255,.03); display:flex; align-items:center; gap:5px; }
+.pill.day   { border-color:rgba(59,130,246,.3);  color:var(--primary); }
+.pill.model { border-color:rgba(124,58,237,.35);  color:var(--neo-l); }
+.pill.tool  { border-color:rgba(245,158,11,.3);  color:var(--amber); }
+
+/* TABS */
+.tabs-bar { background:var(--bg2); border-bottom:1px solid var(--border); position:sticky; top:73px; z-index:99; }
+.tabs-inner { max-width:1200px; margin:0 auto; padding:0 32px; display:flex; overflow-x:auto; }
+.tab-btn { background:none; border:none; color:var(--text-muted); font-family:'Sora',sans-serif; font-size:13px; font-weight:500; padding:14px 22px; cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; white-space:nowrap; display:flex; align-items:center; gap:7px; }
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active { color:var(--neo-l); border-bottom-color:var(--neo-l); background:rgba(124,58,237,.05); }
+
+/* LAYOUT */
+.main-wrap { max-width:1200px; margin:0 auto; padding:40px 32px 80px; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+@media(max-width:768px){ .main-wrap{padding:24px 16px 60px;} .header-inner{padding:14px 16px;} .tabs-inner{padding:0 16px;} .section-hero{padding:28px 24px;} }
+
+/* PROGRESS */
+.progress-track { background:var(--bg3); border-radius:4px; height:5px; margin-bottom:40px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--neo-g); border-radius:4px; transition:width .6s ease; }
+
+/* HERO */
+.section-hero { background:linear-gradient(135deg,var(--bg3),var(--bg4)); border:1px solid var(--border); border-radius:var(--radius-lg); padding:40px 44px; margin-bottom:32px; position:relative; overflow:hidden; }
+.section-hero::before { content:''; position:absolute; top:-60px; right:-60px; width:220px; height:220px; background:radial-gradient(circle,rgba(124,58,237,.14),transparent 70%); border-radius:50%; }
+.section-hero-icon { font-size:2.5rem; margin-bottom:12px; }
+.section-hero h1 { font-size:2rem; font-weight:800; color:#fff; margin-bottom:8px; line-height:1.2; }
+.section-hero h1 span { color:var(--neo-l); }
+.section-hero p { color:var(--text-muted); font-size:.95rem; max-width:680px; }
+.hero-meta { display:flex; gap:24px; margin-top:20px; flex-wrap:wrap; }
+.hero-meta-item { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-muted); }
+.hero-meta-item .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* CARDS */
+.card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:28px 32px; margin-bottom:24px; transition:border-color .2s; }
+.card:hover { border-color:var(--border2); }
+.card-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.card-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.card-icon.neo    { background:rgba(124,58,237,.15); }
+.card-icon.green  { background:rgba(16,185,129,.15); }
+.card-icon.blue   { background:rgba(59,130,246,.15); }
+.card-icon.amber  { background:rgba(245,158,11,.15); }
+.card-icon.cyan   { background:rgba(6,182,212,.15); }
+.card-icon.danger { background:rgba(239,68,68,.15); }
+.card-title { font-size:1rem; font-weight:700; color:#fff; }
+.card-subtitle { font-size:.8rem; color:var(--text-muted); margin-top:2px; }
+
+/* GRID */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+@media(max-width:768px){ .grid-2,.grid-3{grid-template-columns:1fr;} }
+
+/* BOXES */
+.box-info    { background:rgba(59,130,246,.07);  border:1px solid rgba(59,130,246,.2);  border-left:4px solid var(--primary); border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-warning { background:rgba(245,158,11,.07);  border:1px solid rgba(245,158,11,.2);  border-left:4px solid var(--amber);   border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-success { background:rgba(16,185,129,.07);  border:1px solid rgba(16,185,129,.2);  border-left:4px solid var(--green);   border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-neo     { background:rgba(124,58,237,.06);  border:1px solid rgba(124,58,237,.2);  border-left:4px solid var(--neo);     border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-danger  { background:rgba(239,68,68,.07);   border:1px solid rgba(239,68,68,.2);   border-left:4px solid var(--danger);  border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-info strong,.box-warning strong,.box-success strong,.box-neo strong,.box-danger strong { color:var(--text); }
+
+/* CODE */
+.code-block { background:#060d1a; border:1px solid rgba(124,58,237,.15); border-radius:var(--radius); overflow:hidden; margin:16px 0; }
+.code-header { background:var(--bg3); border-bottom:1px solid rgba(124,58,237,.12); padding:8px 16px; display:flex; align-items:center; justify-content:space-between; }
+.code-lang { font-size:11px; font-weight:600; color:var(--neo-l); font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
+.code-dots { display:flex; gap:6px; }
+.code-dots span { width:10px; height:10px; border-radius:50%; }
+.code-dots span:nth-child(1){background:#ef4444;} .code-dots span:nth-child(2){background:#f59e0b;} .code-dots span:nth-child(3){background:#10b981;}
+.code-body { padding:20px 22px; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:.82rem; line-height:1.8; color:#a8b4c8; }
+.k{color:#569cd6;} .s{color:#ce9178;} .n{color:#b5cea8;} .c{color:#6a9955;} .f{color:#dcdcaa;} .p{color:#9cdcfe;} .r{color:var(--neo-l);}
+
+/* SECTION TITLES */
+h2.section-title { font-size:1.3rem; font-weight:800; color:#fff; margin:36px 0 20px; display:flex; align-items:center; gap:10px; }
+h2.section-title .line { flex:1; height:1px; background:var(--border); }
+h3.sub-title { font-size:1rem; font-weight:700; color:var(--text); margin:24px 0 12px; }
+p { color:var(--text-muted); font-size:.9rem; line-height:1.8; margin-bottom:12px; }
+p strong { color:var(--text); }
+
+/* TABLE */
+.compare-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+.compare-table th { background:var(--bg3); color:var(--text-muted); font-weight:600; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; padding:12px 16px; text-align:left; border-bottom:1px solid var(--border); }
+.compare-table td { padding:12px 16px; border-bottom:1px solid var(--border); color:var(--text-muted); vertical-align:top; }
+.compare-table tr:last-child td { border-bottom:none; }
+.compare-table tr:hover td { background:rgba(255,255,255,.02); }
+.compare-table td:first-child { color:var(--text); font-weight:600; }
+.badge-yes { color:var(--green); font-weight:700; }
+.badge-no  { color:var(--danger); font-weight:700; }
+.badge-partial { color:var(--amber); font-weight:700; }
+
+/* TP HEADER */
+.tp-header { background:linear-gradient(135deg,#1e1433,#190f2b); border:1px solid rgba(124,58,237,.25); border-radius:var(--radius-lg); padding:36px 44px; margin-bottom:32px; position:relative; overflow:hidden; }
+.tp-header::after { content:'PHASE 4'; position:absolute; right:32px; bottom:20px; font-family:'JetBrains Mono',monospace; font-size:4rem; font-weight:700; color:rgba(124,58,237,.10); line-height:1; }
+.tp-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(124,58,237,.12); border:1px solid rgba(124,58,237,.25); border-radius:8px; padding:6px 14px; font-size:.75rem; font-weight:700; color:var(--neo-l); font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; margin-bottom:16px; }
+.tp-title { font-size:1.7rem; font-weight:800; color:#fff; margin-bottom:8px; }
+.tp-title span { color:var(--neo-l); }
+.tp-desc { color:var(--text-muted); font-size:.92rem; max-width:620px; }
+.git-branch { display:inline-flex; align-items:center; gap:6px; background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:4px 12px; font-family:'JetBrains Mono',monospace; font-size:.8rem; color:var(--neo-l); margin-top:12px; }
+
+/* CHECKLIST */
+.checklist { list-style:none; display:flex; flex-direction:column; gap:10px; }
+.checklist li { display:flex; align-items:flex-start; gap:10px; color:var(--text-muted); font-size:.88rem; }
+.checklist li::before { content:'✓'; color:var(--green); font-weight:700; flex-shrink:0; margin-top:1px; }
+.checklist li.warn::before { content:'⚠'; color:var(--amber); }
+
+/* RESULT PANEL */
+.result-panel { background:#030810; border:1px solid rgba(124,58,237,.2); border-radius:var(--radius); padding:20px 24px; margin:16px 0; font-family:'JetBrains Mono',monospace; font-size:.82rem; color:var(--neo-l); line-height:1.9; }
+.result-panel .ok  { color:var(--green); }
+.result-panel .key { color:#9cdcfe; }
+.result-panel .val { color:#ce9178; }
+.result-panel .num { color:#b5cea8; }
+
+/* GLOSSAIRE */
+.glossary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media(max-width:900px){ .glossary-grid{grid-template-columns:1fr 1fr;} }
+@media(max-width:560px){ .glossary-grid{grid-template-columns:1fr;} }
+.gl-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; transition:border-color .2s,transform .15s; }
+.gl-card:hover { border-color:rgba(124,58,237,.4); transform:translateY(-2px); }
+.gl-term { font-family:'JetBrains Mono',monospace; font-size:.85rem; font-weight:700; color:var(--neo-l); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.gl-num { font-size:.68rem; background:rgba(124,58,237,.12); border:1px solid rgba(124,58,237,.2); border-radius:4px; padding:2px 6px; color:rgba(167,139,250,.8); flex-shrink:0; }
+.gl-def { font-size:.83rem; color:var(--text-muted); line-height:1.6; }
+.gl-def strong { color:var(--text); }
+.gl-tag { display:inline-block; margin-top:10px; font-size:.68rem; padding:2px 8px; border-radius:10px; font-family:'JetBrains Mono',monospace; }
+.gl-tag.concept  { background:rgba(59,130,246,.12);  color:#93c5fd; border:1px solid rgba(59,130,246,.2); }
+.gl-tag.cypher   { background:rgba(124,58,237,.12);  color:#c4b5fd; border:1px solid rgba(124,58,237,.2); }
+.gl-tag.archi    { background:rgba(6,182,212,.12);   color:#67e8f9; border:1px solid rgba(6,182,212,.2); }
+.gl-tag.modele   { background:rgba(245,158,11,.12);  color:#fcd34d; border:1px solid rgba(245,158,11,.2); }
+
+/* QUIZ */
+.q-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:30px 34px; }
+.q-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; gap:16px; }
+.q-counter { font-family:'JetBrains Mono',monospace; font-size:.75rem; font-weight:700; color:var(--text-dim); letter-spacing:.08em; white-space:nowrap; }
+.q-mini-bar { flex:1; height:4px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+.q-mini-fill { height:100%; background:var(--neo-g); border-radius:4px; transition:width .4s ease; }
+.q-text { font-size:1rem; font-weight:600; color:var(--text); margin-bottom:22px; line-height:1.55; }
+.q-options { display:flex; flex-direction:column; gap:10px; }
+.q-opt { background:var(--bg3); border:2px solid var(--border); border-radius:10px; padding:13px 20px; font-size:.88rem; color:var(--text-muted); cursor:pointer; text-align:left; font-family:'Sora',sans-serif; transition:background .15s,border-color .15s,color .15s; width:100%; display:flex; align-items:center; gap:12px; }
+.q-opt-letter { width:26px; height:26px; border-radius:6px; background:rgba(255,255,255,.06); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:.72rem; font-weight:700; color:var(--text-dim); flex-shrink:0; transition:background .15s,border-color .15s,color .15s; }
+.q-opt:hover:not(:disabled) { background:rgba(124,58,237,.06); border-color:rgba(124,58,237,.3); color:var(--text); }
+.q-opt:hover:not(:disabled) .q-opt-letter { background:rgba(124,58,237,.15); border-color:rgba(124,58,237,.3); color:var(--neo-l); }
+.q-opt.selected { background:rgba(59,130,246,.08); border-color:var(--primary); color:var(--text); }
+.q-opt.selected .q-opt-letter { background:var(--primary); border-color:var(--primary); color:#fff; }
+.q-opt.correct { background:rgba(16,185,129,.10); border-color:var(--green); color:var(--green); font-weight:600; }
+.q-opt.correct .q-opt-letter { background:var(--green); border-color:var(--green); color:#fff; }
+.q-opt.wrong { background:rgba(239,68,68,.08); border-color:var(--danger); color:var(--danger); }
+.q-opt.wrong .q-opt-letter { background:var(--danger); border-color:var(--danger); color:#fff; }
+.q-opt:disabled { cursor:default; }
+.q-actions { display:flex; align-items:center; gap:12px; margin-top:20px; }
+.btn-validate { background:var(--neo-g); border:none; color:#fff; font-family:'Sora',sans-serif; font-size:.88rem; font-weight:700; padding:11px 28px; border-radius:9px; cursor:pointer; transition:opacity .15s; }
+.btn-validate:hover:not(:disabled) { opacity:.9; }
+.btn-validate:disabled { opacity:.35; cursor:not-allowed; }
+.btn-next { background:rgba(124,58,237,.12); border:1px solid rgba(124,58,237,.3); color:var(--neo-l); font-family:'Sora',sans-serif; font-size:.88rem; font-weight:600; padding:11px 24px; border-radius:9px; cursor:pointer; transition:background .15s; display:none; }
+.btn-next:hover { background:rgba(124,58,237,.22); }
+.q-feedback { margin-top:16px; border-radius:10px; padding:14px 18px; font-size:.86rem; line-height:1.6; display:none; }
+.q-feedback.show { display:block; }
+.q-feedback.ok { background:rgba(16,185,129,.07); border:1px solid rgba(16,185,129,.2); border-left:4px solid var(--green); }
+.q-feedback.ok .fb-title { color:var(--green); font-weight:700; margin-bottom:4px; }
+.q-feedback.ko { background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.2); border-left:4px solid var(--danger); }
+.q-feedback.ko .fb-title { color:var(--danger); font-weight:700; margin-bottom:4px; }
+.fb-expl { color:var(--text-muted); }
+
+/* SCORE */
+.quiz-score { background:linear-gradient(135deg,var(--bg3),var(--bg4)); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px; text-align:center; margin-top:8px; display:none; }
+.quiz-score.show { display:block; }
+.score-big { font-size:3.5rem; font-weight:800; color:var(--neo-l); line-height:1; margin-bottom:8px; }
+.score-label { font-size:1rem; color:var(--text-muted); margin-bottom:20px; }
+.btn-retry { background:rgba(124,58,237,.12); border:1px solid rgba(124,58,237,.3); color:var(--neo-l); font-family:'Sora',sans-serif; font-size:.88rem; font-weight:600; padding:10px 28px; border-radius:8px; cursor:pointer; transition:background .15s; }
+.btn-retry:hover { background:rgba(124,58,237,.22); }
+
+/* OBJ GRID */
+.obj-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media(max-width:768px){ .obj-grid{grid-template-columns:1fr 1fr;} }
+.obj-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; display:flex; flex-direction:column; gap:8px; }
+.obj-icon { font-size:1.5rem; }
+.obj-text { font-size:.83rem; color:var(--text-muted); line-height:1.5; }
+.obj-text strong { color:var(--text); display:block; margin-bottom:3px; }
+
+/* GRAPH SCHEMA */
+.graph-demo { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; padding:24px; background:var(--bg3); border-radius:var(--radius); margin:16px 0; font-family:'JetBrains Mono',monospace; font-size:.8rem; }
+.gnode { background:rgba(124,58,237,.15); border:2px solid var(--neo); color:var(--neo-l); padding:8px 14px; border-radius:999px; font-weight:700; }
+.gnode.cat { background:rgba(245,158,11,.12); border-color:var(--amber); color:#fcd34d; }
+.gnode.sess { background:rgba(6,182,212,.12); border-color:var(--cyan); color:#67e8f9; }
+.grel { color:var(--text-dim); font-size:.75rem; white-space:nowrap; }
+.grel b { color:var(--neo-l); }
+
+/* VARIANT SWITCH */
+.variant-switch { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 4px; }
+.variant-link { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:10px; font-size:.85rem; font-weight:600; text-decoration:none; border:1px solid var(--border); transition:all .15s; }
+.variant-link.active { background:var(--neo-g); color:#fff; border-color:transparent; }
+.variant-link.alt { background:var(--bg3); color:var(--text-muted); }
+.variant-link.alt:hover { border-color:var(--border2); color:var(--text); }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.tab-content.active { animation:fadeIn .35s ease; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <span class="header-badge">Neo4j</span>
+    <h1 class="header-title">NoSQL · <span>Graphe</span> — Phase 4</h1>
+    <div class="header-pills">
+      <span class="pill day">📅 Jour 4</span>
+      <span class="pill model">🕸️ Graphe</span>
+      <span class="pill tool">💻 Neo4j Desktop</span>
+      <span class="pill">🎓 BAC+3</span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs-bar">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="switchTab('theorie')">📘 Théorie</button>
+    <button class="tab-btn" onclick="switchTab('prise-en-main')">💻 Prise en main</button>
+    <button class="tab-btn" onclick="switchTab('tp')">🎯 TP · SportShopy</button>
+    <button class="tab-btn" onclick="switchTab('solutions')">✅ Solutions</button>
+    <button class="tab-btn" onclick="switchTab('recap')">📋 Récap</button>
+    <button class="tab-btn" onclick="switchTab('glossaire')">📖 Glossaire</button>
+    <button class="tab-btn" onclick="switchTab('quiz')">🎯 Questionnaire</button>
+  </div>
+</nav>
+
+<main class="main-wrap">
+
+<!-- ══════════════════════════════════ THÉORIE ══════════════════════ -->
+<div id="tab-theorie" class="tab-content active">
+  <div class="progress-track"><div class="progress-fill" style="width:14%"></div></div>
+
+  <div class="variant-switch">
+    <a class="variant-link alt" href="index.html">← 🐳 Version Docker</a>
+    <span class="variant-link active">💻 Version Neo4j Desktop</span>
+  </div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">🕸️</div>
+    <h1>Le modèle <span>Graphe</span></h1>
+    <p>Neo4j stocke les données comme un <strong>réseau de nœuds reliés par des relations</strong>. Là où SQL doit faire des jointures coûteuses pour suivre des liens, le graphe les parcourt nativement. Cas d'usage roi : les <strong>recommandations</strong> — « les clients qui ont vu ce produit ont aussi vu… ».</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><span class="dot" style="background:var(--neo-l)"></span>Nœuds + relations</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--amber)"></span>Cypher (ASCII-art)</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--green)"></span>Traversées rapides</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--cyan)"></span>neo4j-driver</div>
+    </div>
+  </div>
+
+  <h2 class="section-title">🎯 Objectifs de la phase <span class="line"></span></h2>
+  <div class="obj-grid">
+    <div class="obj-card"><div class="obj-icon">🕸️</div><div class="obj-text"><strong>Comprendre le modèle graphe</strong>Nœuds, relations, propriétés, labels</div></div>
+    <div class="obj-card"><div class="obj-icon">💻</div><div class="obj-text"><strong>Installer Neo4j Desktop</strong>Base locale tout-en-un + Browser intégré</div></div>
+    <div class="obj-card"><div class="obj-icon">⌨️</div><div class="obj-text"><strong>Écrire du Cypher</strong>CREATE, MATCH, MERGE, patterns fléchés</div></div>
+    <div class="obj-card"><div class="obj-icon">🧭</div><div class="obj-text"><strong>Modéliser le graphe produit</strong>Product, Category, Session + relations</div></div>
+    <div class="obj-card"><div class="obj-icon">🤝</div><div class="obj-text"><strong>Recommander</strong>recommendationService : similaires & co-vus</div></div>
+    <div class="obj-card"><div class="obj-icon">⚛️</div><div class="obj-text"><strong>Afficher les suggestions</strong>SimilarProducts sous la fiche produit</div></div>
+  </div>
+
+  <h2 class="section-title">⚡ Pourquoi un graphe pour les recommandations ? <span class="line"></span></h2>
+  <div class="card">
+    <p>Recommander, c'est suivre des <strong>chaînes de relations</strong> : produit → catégorie → autres produits, ou produit → sessions → autres produits vus. C'est exactement ce qu'un graphe fait sans effort.</p>
+    <table class="compare-table" style="margin-top:16px">
+      <thead><tr><th>Critère</th><th>SQL relationnel</th><th>Neo4j (graphe)</th></tr></thead>
+      <tbody>
+        <tr><td>Suivre une relation</td><td>JOIN (coûteux en profondeur)</td><td><span class="badge-yes">Traversée native</span></td></tr>
+        <tr><td>« Amis d'amis » / co-vus</td><td>Jointures imbriquées lentes</td><td>Pattern direct en Cypher</td></tr>
+        <tr><td>Schéma</td><td>Rigide, migrations lourdes</td><td>Flexible (labels + propriétés)</td></tr>
+        <tr><td>Lisibilité de la requête</td><td>Verbeux</td><td>Visuel, proche du dessin</td></tr>
+        <tr><td>Visualisation</td><td>Tables</td><td><span class="badge-yes">Graphe interactif</span></td></tr>
+      </tbody>
+    </table>
+    <div class="box-neo"><strong>Règle empirique :</strong> Neo4j quand les <strong>relations</strong> sont la donnée importante (recommandations, réseaux sociaux, détection de fraude, chemins). À éviter pour du stockage tabulaire simple ou des agrégats massifs.</div>
+  </div>
+
+  <h2 class="section-title">🧩 Les briques du modèle graphe <span class="line"></span></h2>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-icon neo">⬤</div><div><div class="card-title">Nœud (Node)</div><div class="card-subtitle">Une entité</div></div></div>
+      <p>Représente une chose : un produit, une catégorie, une session. Porte un ou plusieurs <strong>labels</strong> (<code>:Product</code>) et des <strong>propriétés</strong> (<code>{id, name, price}</code>).</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-icon amber">➜</div><div><div class="card-title">Relation (Relationship)</div><div class="card-subtitle">Un lien orienté et typé</div></div></div>
+      <p>Connecte deux nœuds, toujours avec un <strong>type</strong> (<code>:IN_CATEGORY</code>) et une <strong>direction</strong>. Peut elle aussi porter des propriétés (ex. un poids, une date).</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-icon cyan">🏷️</div><div><div class="card-title">Label</div><div class="card-subtitle">Le « type » d'un nœud</div></div></div>
+      <p>Groupe les nœuds par rôle (<code>:Product</code>, <code>:Category</code>). Un nœud peut avoir plusieurs labels. Sert à cibler les requêtes et à indexer.</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-icon green">🔑</div><div><div class="card-title">Propriété</div><div class="card-subtitle">Paire clé-valeur</div></div></div>
+      <p>Données stockées sur un nœud ou une relation : <code>name: "Nike Pegasus"</code>, <code>price: 129.99</code>. Pas de schéma rigide imposé.</p>
+    </div>
+  </div>
+
+  <h2 class="section-title">⌨️ Cypher — le langage en « ASCII-art » <span class="line"></span></h2>
+  <div class="card">
+    <p>Cypher décrit des <strong>motifs visuels</strong>. Un nœud s'écrit entre parenthèses <code>(p:Product)</code>, une relation entre crochets fléchés <code>-[:IN_CATEGORY]-&gt;</code>. La requête ressemble au dessin du graphe.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cypher · les bases</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// Créer un nœud</span><br>
+<span class="k">CREATE</span> (<span class="r">p</span>:<span class="p">Product</span> {id: <span class="s">'p-run-001'</span>, name: <span class="s">'Nike Pegasus'</span>, price: <span class="n">129.99</span>})<br><br>
+<span class="c">// Créer une relation entre deux nœuds existants</span><br>
+<span class="k">MATCH</span> (<span class="r">p</span>:<span class="p">Product</span> {id: <span class="s">'p-run-001'</span>}), (<span class="r">c</span>:<span class="p">Category</span> {name: <span class="s">'running'</span>})<br>
+<span class="k">CREATE</span> (<span class="r">p</span>)-[:<span class="p">IN_CATEGORY</span>]-&gt;(<span class="r">c</span>)<br><br>
+<span class="c">// Lire : tous les produits d'une catégorie</span><br>
+<span class="k">MATCH</span> (<span class="r">p</span>:<span class="p">Product</span>)-[:<span class="p">IN_CATEGORY</span>]-&gt;(:<span class="p">Category</span> {name: <span class="s">'running'</span>})<br>
+<span class="k">RETURN</span> <span class="r">p</span>.name, <span class="r">p</span>.price
+      </div>
+    </div>
+    <div class="box-neo"><strong>MERGE = « CREATE si absent, sinon MATCH ».</strong> Pour seeder un graphe sans doublons, on utilise <code>MERGE</code> plutôt que <code>CREATE</code> : il évite de recréer un nœud déjà présent.</div>
+  </div>
+
+  <h2 class="section-title">🛒 Le modèle de SportShopy <span class="line"></span></h2>
+  <div class="card">
+    <p>Trois types de nœuds et leurs relations suffisent pour les recommandations :</p>
+    <div class="graph-demo">
+      <span class="gnode sess">:Session</span>
+      <span class="grel">—<b>:VIEWED</b>→</span>
+      <span class="gnode">:Product</span>
+      <span class="grel">—<b>:IN_CATEGORY</b>→</span>
+      <span class="gnode cat">:Category</span>
+    </div>
+    <table class="compare-table" style="margin-top:8px">
+      <thead><tr><th>Élément</th><th>Type</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td>:Product</td><td>Nœud</td><td>Un produit du catalogue (id, name, price)</td></tr>
+        <tr><td>:Category</td><td>Nœud</td><td>Une des 6 catégories</td></tr>
+        <tr><td>:Session</td><td>Nœud</td><td>Une session de visite (réutilise le sessionId)</td></tr>
+        <tr><td>:IN_CATEGORY</td><td>Relation</td><td>Product → Category (similarité structurelle)</td></tr>
+        <tr><td>:VIEWED</td><td>Relation</td><td>Session → Product (similarité comportementale)</td></tr>
+      </tbody>
+    </table>
+    <div class="box-info">Deux stratégies de reco : <strong>structurelle</strong> (même catégorie) et <strong>comportementale</strong> (« co-vus » via les sessions). La seconde est plus pertinente mais demande des données de navigation.</div>
+  </div>
+
+  <h2 class="section-title">🧭 Traversée vs jointure : l'avantage clé <span class="line"></span></h2>
+  <div class="card">
+    <p>En SQL, trouver les « produits co-vus » exige de joindre la table des vues à elle-même, ce qui devient lent à mesure que les données grossissent. En Cypher, c'est un <strong>seul motif</strong> qui se lit naturellement :</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cypher · produits co-vus</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">MATCH</span> (<span class="r">p</span>:<span class="p">Product</span> {id: $id})&lt;-[:<span class="p">VIEWED</span>]-(:<span class="p">Session</span>)-[:<span class="p">VIEWED</span>]-&gt;(<span class="r">reco</span>:<span class="p">Product</span>)<br>
+<span class="k">WHERE</span> <span class="r">reco</span>.id &lt;&gt; $id<br>
+<span class="k">RETURN</span> <span class="r">reco</span>.id, <span class="k">count</span>(*) <span class="k">AS</span> score<br>
+<span class="k">ORDER BY</span> score <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="n">4</span>
+      </div>
+    </div>
+    <div class="box-success">Lecture : « les produits vus dans les mêmes sessions que p, classés par nombre de sessions communes ». Un graphe rend cette logique <strong>lisible et performante</strong>.</div>
+  </div>
+</div><!-- /tab-theorie -->
+
+<!-- ════════════════════════════ PRISE EN MAIN (NEO4J DESKTOP) ═══════════════════════ -->
+<div id="tab-prise-en-main" class="tab-content">
+  <div class="progress-track"><div class="progress-fill" style="width:28%"></div></div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">💻</div>
+    <h1>Neo4j avec <span>Neo4j Desktop</span></h1>
+    <p>L'application officielle gratuite : elle embarque le moteur Neo4j <strong>et</strong> le Browser (visualisation de graphe). Idéale pour découvrir le graphe sans conteneur ni ligne de commande.</p>
+  </div>
+
+  <h2 class="section-title">⬇️ Installer Neo4j Desktop <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon neo">📦</div><div><div class="card-title">Application desktop tout-en-un</div><div class="card-subtitle">macOS · Windows · Linux</div></div></div>
+    <ul class="checklist" style="margin-top:4px">
+      <li>Télécharge Neo4j Desktop depuis <code>neo4j.com/download</code></li>
+      <li>Installe puis lance l'application (gratuite ; une clé d'activation gratuite peut être demandée au 1<sup>er</sup> lancement)</li>
+      <li>Neo4j Desktop inclut le moteur de base, le <strong>Neo4j Browser</strong> et des outils de visualisation</li>
+    </ul>
+    <div class="box-success"><strong>Aucune dépendance à installer à la main :</strong> contrairement à Cassandra (JDK requis) ou à l'installation serveur, Neo4j Desktop embarque tout — moteur, Browser, version de Java compatible.</div>
+  </div>
+
+  <h2 class="section-title">🗄️ Créer une base locale <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon amber">➕</div><div><div class="card-title">Local DBMS</div><div class="card-subtitle">C'est ici qu'on fixe le mot de passe</div></div></div>
+    <ul class="checklist" style="margin-top:4px">
+      <li>Crée un <strong>Project</strong>, puis <strong>Add → Local DBMS</strong></li>
+      <li>Choisis une version <strong>5.x</strong> et <strong>définis un mot de passe</strong> (à retenir : il servira côté serveur Node)</li>
+      <li>Clique sur <strong>Start</strong> (▶) pour démarrer le moteur (~15s)</li>
+      <li>Ouvre la base avec le bouton <strong>Open → Neo4j Browser</strong></li>
+    </ul>
+    <div class="box-neo"><strong>L'utilisateur par défaut est <code>neo4j</code></strong>, et le mot de passe est celui que tu viens de saisir. La connexion applicative se fait sur le protocole <strong>Bolt</strong> : <code>bolt://localhost:7687</code> (port par défaut).</div>
+    <div class="box-warning"><strong>Si tu lances plusieurs bases</strong> dans Desktop, les ports Bolt peuvent varier (7687, 7688…). Vérifie le port exact dans les détails de connexion de ta base (onglet « Connect »).</div>
+  </div>
+
+  <h2 class="section-title">🖥️ Le Neo4j Browser <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon neo">🌐</div><div><div class="card-title">Console Cypher + visualisation</div><div class="card-subtitle">Lancé depuis Desktop (ou http://localhost:7474)</div></div></div>
+    <p>Le Browser est le <strong>même outil</strong> qu'en version Docker — il est livré avec le moteur Neo4j quel que soit le mode d'installation. Tu y écris du Cypher et tu vois le graphe se dessiner.</p>
+    <div class="box-success">C'est le gros avantage de Neo4j : la visualisation interactive des nœuds et relations est <strong>native et gratuite</strong>, sans outil tiers (à la différence de Cassandra).</div>
+  </div>
+
+  <h2 class="section-title">⌨️ Premières requêtes Cypher <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cypher · dans le Browser</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// Créer deux produits et une catégorie (MERGE = pas de doublon)</span><br>
+<span class="k">MERGE</span> (c:<span class="p">Category</span> {name: <span class="s">'running'</span>})<br>
+<span class="k">MERGE</span> (p1:<span class="p">Product</span> {id: <span class="s">'p-run-001'</span>, name: <span class="s">'Nike Pegasus'</span>})<br>
+<span class="k">MERGE</span> (p2:<span class="p">Product</span> {id: <span class="s">'p-run-002'</span>, name: <span class="s">'Adidas Boston'</span>})<br>
+<span class="k">MERGE</span> (p1)-[:<span class="p">IN_CATEGORY</span>]-&gt;(c)<br>
+<span class="k">MERGE</span> (p2)-[:<span class="p">IN_CATEGORY</span>]-&gt;(c);<br><br>
+<span class="c">// Voir tout le graphe</span><br>
+<span class="k">MATCH</span> (n) <span class="k">RETURN</span> n;<br><br>
+<span class="c">// Produits de la même catégorie que p-run-001 (recommandation simple)</span><br>
+<span class="k">MATCH</span> (p:<span class="p">Product</span> {id: <span class="s">'p-run-001'</span>})-[:<span class="p">IN_CATEGORY</span>]-&gt;(:<span class="p">Category</span>)&lt;-[:<span class="p">IN_CATEGORY</span>]-(reco:<span class="p">Product</span>)<br>
+<span class="k">RETURN</span> reco.name;
+      </div>
+    </div>
+    <div class="box-info"><strong>Alternative sans GUI :</strong> l'installation serveur (tarball Apache, <code>bin/neo4j start</code>) fournit aussi <code>bin/cypher-shell</code>, un shell Cypher en terminal — l'équivalent de <code>cqlsh</code> pour Cassandra.</div>
+  </div>
+</div><!-- /tab-prise-en-main -->
+
+<!-- ════════════════════════════ TP SPORTSHOPY ═══════════════════════ -->
+<div id="tab-tp" class="tab-content">
+  <div class="progress-track"><div class="progress-fill" style="width:57%"></div></div>
+
+  <div class="tp-header">
+    <div class="tp-badge">🎯 TP Phase 4</div>
+    <div class="tp-title">SportShopy × <span>Neo4j</span></div>
+    <div class="tp-desc">Catalogue (MongoDB), panier (Redis), analytics (Cassandra) sont en place. Dernière brique : un <strong>graphe de produits</strong> pour afficher « produits similaires » sous chaque fiche.</div>
+    <div class="git-branch">⎇ feature/neo4j</div>
+  </div>
+
+  <h2 class="section-title">Étape 1 — Démarrer Neo4j (Desktop) <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon neo">💻</div><div><div class="card-title">Base locale + variables d'environnement</div></div></div>
+    <ul class="checklist" style="margin-top:4px">
+      <li>Dans Neo4j Desktop, démarre ta base locale (bouton <strong>Start ▶</strong>)</li>
+      <li>Note le port <strong>Bolt</strong> (par défaut <code>7687</code>) et le mot de passe défini à la création</li>
+      <li>(Optionnel) ouvre le Browser pour vérifier la connexion — tu dois voir « Connected »</li>
+    </ul>
+    <p>Complète <code>server/.env</code> (les 3 lignes Neo4j sont déjà présentes, remplace le mot de passe) :</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">env · server/.env — extrait</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c"># Phase 4 — Neo4j</span><br>
+NEO4J_URI=bolt://localhost:7687<br>
+NEO4J_USER=neo4j<br>
+NEO4J_PASSWORD=<span class="s">monMotDePasse</span>&nbsp;&nbsp;<span class="c"># le mot de passe défini dans Neo4j Desktop</span>
+      </div>
+    </div>
+    <div class="box-info">Le driver Node se connecte sur le port <strong>Bolt 7687</strong>, pas sur le 7474 (qui est le Browser HTTP). Si tu as plusieurs bases dans Desktop, vérifie le port dans l'onglet « Connect ».</div>
+  </div>
+
+  <h2 class="section-title">Étape 2 — Driver Neo4j <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon neo">🔌</div><div><div class="card-title">server/config/neo4j.js</div><div class="card-subtitle">Créer ce fichier</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash · installer le driver</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+cd server &amp;&amp; npm install neo4j-driver
+      </div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/config/neo4j.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> neo4j = <span class="f">require</span>(<span class="s">'neo4j-driver'</span>)<br><br>
+<span class="k">const</span> driver = neo4j.<span class="f">driver</span>(<br>
+&nbsp;&nbsp;process.env.<span class="p">NEO4J_URI</span>  || <span class="s">'bolt://localhost:7687'</span>,<br>
+&nbsp;&nbsp;neo4j.auth.<span class="f">basic</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;process.env.<span class="p">NEO4J_USER</span>     || <span class="s">'neo4j'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;process.env.<span class="p">NEO4J_PASSWORD</span> || <span class="s">'password'</span><br>
+&nbsp;&nbsp;)<br>
+)<br><br>
+module.exports = driver
+      </div>
+    </div>
+    <div class="box-neo"><strong>Un seul driver pour toute l'app</strong> — il gère un pool de connexions. On ouvre une <code>session</code> courte par requête (dans un <code>try/finally</code>), jamais une session permanente.</div>
+  </div>
+
+  <h2 class="section-title">Étape 3 — Seeder le graphe <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon amber">🌱</div><div><div class="card-title">server/scripts/seedGraph.js</div><div class="card-subtitle">Créer ce fichier — produits + catégories depuis data/products.json</div></div></div>
+    <p>Ce script est appelé au démarrage du serveur (<code>server.js</code>). Il reconstruit le graphe à partir du catalogue JSON existant : un nœud <code>:Product</code> par produit, un nœud <code>:Category</code> par catégorie, et la relation <code>:IN_CATEGORY</code>.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/scripts/seedGraph.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> driver   = <span class="f">require</span>(<span class="s">'../config/neo4j'</span>)<br>
+<span class="k">const</span> products = <span class="f">require</span>(<span class="s">'../../data/products.json'</span>)<br><br>
+<span class="k">async function</span> <span class="f">seedGraph</span>() {<br>
+&nbsp;&nbsp;<span class="k">const</span> session = driver.<span class="f">session</span>()<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// Contraintes d'unicité — évite les doublons au re-seed</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">run</span>(<span class="s">'CREATE CONSTRAINT IF NOT EXISTS FOR (p:Product)  REQUIRE p.id   IS UNIQUE'</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">run</span>(<span class="s">'CREATE CONSTRAINT IF NOT EXISTS FOR (c:Category) REQUIRE c.name IS UNIQUE'</span>)<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">for</span> (<span class="k">const</span> p <span class="k">of</span> products) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">run</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`<span class="k">MERGE</span> (c:<span class="p">Category</span> {name: $category})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">MERGE</span> (p:<span class="p">Product</span>  {id: $id})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">SET</span> p.name = $name, p.price = $price, p.image = $image<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">MERGE</span> (p)-[:<span class="p">IN_CATEGORY</span>]-&gt;(c)`,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ id: p.id, name: p.name, price: p.price, image: p.image, category: p.category }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">log</span>(`🌱 ${products.length} produits seedés dans le graphe Neo4j`)<br>
+&nbsp;&nbsp;} <span class="k">finally</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">close</span>()<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+module.exports = seedGraph
+      </div>
+    </div>
+    <div class="box-warning"><strong>MERGE vs CREATE :</strong> <code>MERGE</code> est idempotent — relancer le seed n'ajoute pas de doublons. <code>CREATE</code> créerait un doublon à chaque redémarrage.</div>
+  </div>
+
+  <h2 class="section-title">Étape 4 — Service + route de recommandations <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon blue">🧠</div><div><div class="card-title">server/services/recommendationService.js</div><div class="card-subtitle">Créer ce fichier — 2 fonctions</div></div></div>
+    <p>Deux stratégies de recommandation : <strong>structurelle</strong> (même catégorie) et <strong>comportementale</strong> (co-vus dans les mêmes sessions).</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/services/recommendationService.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> neo4j  = <span class="f">require</span>(<span class="s">'neo4j-driver'</span>)<br>
+<span class="k">const</span> driver = <span class="f">require</span>(<span class="s">'../config/neo4j'</span>)<br><br>
+<span class="c">// Produits de la même catégorie</span><br>
+<span class="k">async function</span> <span class="f">getSimilarProducts</span>(productId, limit = <span class="n">4</span>) {<br>
+&nbsp;&nbsp;<span class="k">const</span> session = driver.<span class="f">session</span>()<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> result = <span class="k">await</span> session.<span class="f">run</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`<span class="k">MATCH</span> (p:<span class="p">Product</span> {id: $id})-[:<span class="p">IN_CATEGORY</span>]-&gt;(:<span class="p">Category</span>)&lt;-[:<span class="p">IN_CATEGORY</span>]-(reco:<span class="p">Product</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">WHERE</span> reco.id &lt;&gt; $id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">RETURN</span> reco.id <span class="k">AS</span> id, reco.name <span class="k">AS</span> name, reco.price <span class="k">AS</span> price, reco.image <span class="k">AS</span> image<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">LIMIT</span> $limit`,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ id: productId, limit: neo4j.<span class="f">int</span>(limit) }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> result.records.<span class="f">map</span>(r =&gt; ({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;id: r.<span class="f">get</span>(<span class="s">'id'</span>), name: r.<span class="f">get</span>(<span class="s">'name'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price: r.<span class="f">get</span>(<span class="s">'price'</span>), image: r.<span class="f">get</span>(<span class="s">'image'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}))<br>
+&nbsp;&nbsp;} <span class="k">finally</span> { <span class="k">await</span> session.<span class="f">close</span>() }<br>
+}<br><br>
+<span class="c">// Produits vus dans les mêmes sessions (collaboratif)</span><br>
+<span class="k">async function</span> <span class="f">getAlsoViewed</span>(productId, limit = <span class="n">4</span>) {<br>
+&nbsp;&nbsp;<span class="k">const</span> session = driver.<span class="f">session</span>()<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> result = <span class="k">await</span> session.<span class="f">run</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`<span class="k">MATCH</span> (p:<span class="p">Product</span> {id: $id})&lt;-[:<span class="p">VIEWED</span>]-(:<span class="p">Session</span>)-[:<span class="p">VIEWED</span>]-&gt;(reco:<span class="p">Product</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">WHERE</span> reco.id &lt;&gt; $id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">RETURN</span> reco.id <span class="k">AS</span> id, reco.name <span class="k">AS</span> name, reco.price <span class="k">AS</span> price, reco.image <span class="k">AS</span> image,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count(*) <span class="k">AS</span> score<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">ORDER BY</span> score <span class="k">DESC LIMIT</span> $limit`,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ id: productId, limit: neo4j.<span class="f">int</span>(limit) }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> result.records.<span class="f">map</span>(r =&gt; ({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;id: r.<span class="f">get</span>(<span class="s">'id'</span>), name: r.<span class="f">get</span>(<span class="s">'name'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price: r.<span class="f">get</span>(<span class="s">'price'</span>), image: r.<span class="f">get</span>(<span class="s">'image'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;score: r.<span class="f">get</span>(<span class="s">'score'</span>).<span class="f">toNumber</span>(),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}))<br>
+&nbsp;&nbsp;} <span class="k">finally</span> { <span class="k">await</span> session.<span class="f">close</span>() }<br>
+}<br><br>
+module.exports = { getSimilarProducts, getAlsoViewed }
+      </div>
+    </div>
+    <div class="box-warning"><strong>Pièges driver :</strong> les entiers en paramètre <code>LIMIT</code> doivent être wrappés avec <code>neo4j.int()</code>. Les entiers renvoyés (<code>count(*)</code>) sont des objets <code>Integer</code> Neo4j → appelle <code>.toNumber()</code>.</div>
+  </div>
+
+  <div class="card" style="margin-top:0">
+    <div class="card-header"><div class="card-icon blue">🛣️</div><div><div class="card-title">server/routes/recommendations.js</div><div class="card-subtitle">Créer ce fichier</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/routes/recommendations.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> express = <span class="f">require</span>(<span class="s">'express'</span>)<br>
+<span class="k">const</span> { getSimilarProducts, getAlsoViewed } = <span class="f">require</span>(<span class="s">'../services/recommendationService'</span>)<br><br>
+<span class="k">const</span> router = express.<span class="f">Router</span>()<br><br>
+<span class="c">// GET /api/recommendations/:id — produits de la même catégorie</span><br>
+router.<span class="f">get</span>(<span class="s">'/:id'</span>, <span class="k">async</span> (req, res, next) =&gt; {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> data = <span class="k">await</span> <span class="f">getSimilarProducts</span>(req.params.id)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ success: <span class="k">true</span>, data })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+<span class="c">// GET /api/recommendations/:id/also-viewed — co-vus en session</span><br>
+router.<span class="f">get</span>(<span class="s">'/:id/also-viewed'</span>, <span class="k">async</span> (req, res, next) =&gt; {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> data = <span class="k">await</span> <span class="f">getAlsoViewed</span>(req.params.id)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ success: <span class="k">true</span>, data })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+module.exports = router
+      </div>
+    </div>
+    <p style="margin-top:12px">La route est déjà enregistrée dans <code>server/app.js</code> :</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/app.js — déjà présent</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// ── Routes Phase 4 : Neo4j ───────────────────────────</span><br>
+app.<span class="f">use</span>(<span class="s">'/api/recommendations'</span>, <span class="f">require</span>(<span class="s">'./routes/recommendations'</span>))
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Étape 5 — Démarrage du serveur <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon green">🚀</div><div><div class="card-title">server/server.js</div><div class="card-subtitle">Modifier — ajouter l'init Neo4j après Cassandra</div></div></div>
+    <p>Le fichier <code>server.js</code> démarre les connexions dans l'ordre : MongoDB (bloquant), puis Cassandra et Neo4j (non-bloquants si erreur).</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/server.js — complet</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> app           = <span class="f">require</span>(<span class="s">'./app'</span>)<br>
+<span class="k">const</span> { connectDB } = <span class="f">require</span>(<span class="s">'./config/database'</span>)<br>
+<span class="k">const</span> { PORT }      = <span class="f">require</span>(<span class="s">'./config/env'</span>)<br>
+<span class="k">const</span> neo4jDriver   = <span class="f">require</span>(<span class="s">'./config/neo4j'</span>)<br>
+<span class="k">const</span> seedGraph     = <span class="f">require</span>(<span class="s">'./scripts/seedGraph'</span>)<br>
+<span class="k">const</span> initCassandra = <span class="f">require</span>(<span class="s">'./scripts/initCassandra'</span>)<br><br>
+<span class="c">// Redis se connecte en arrière-plan — son import suffit</span><br>
+<span class="f">require</span>(<span class="s">'./config/redis'</span>)<br><br>
+<span class="k">async function</span> <span class="f">start</span>() {<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">connectDB</span>()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// MongoDB — bloquant</span><br>
+&nbsp;&nbsp;<span class="k">try</span> { <span class="k">await</span> <span class="f">initCassandra</span>() }&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// Cassandra — non-bloquant</span><br>
+&nbsp;&nbsp;<span class="k">catch</span> (e) { console.<span class="f">error</span>(<span class="s">'⚠️ Cassandra non prête :'</span>, e.message) }<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> neo4jDriver.<span class="f">verifyConnectivity</span>()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// vérifie la connexion Bolt</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> <span class="f">seedGraph</span>()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// MERGE produits dans le graphe</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">log</span>(<span class="s">'✅ Neo4j connecté'</span>)<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (e) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">error</span>(<span class="s">'⚠️ Neo4j non disponible :'</span>, e.message)<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;app.<span class="f">listen</span>(PORT, () =&gt; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">log</span>(`🚀 SportShopy API — http://localhost:${PORT}/api/health`)<br>
+&nbsp;&nbsp;})<br>
+}<br><br>
+start().<span class="f">catch</span>(err =&gt; {<br>
+&nbsp;&nbsp;console.<span class="f">error</span>(<span class="s">'❌ Démarrage impossible :'</span>, err.message)<br>
+&nbsp;&nbsp;process.<span class="f">exit</span>(<span class="n">1</span>)<br>
+})<br><br>
+<span class="c">// Fermeture propre du driver à l'arrêt</span><br>
+process.<span class="f">on</span>(<span class="s">'SIGINT'</span>, <span class="k">async</span> () =&gt; {<br>
+&nbsp;&nbsp;<span class="k">await</span> neo4jDriver.<span class="f">close</span>()<br>
+&nbsp;&nbsp;process.<span class="f">exit</span>(<span class="n">0</span>)<br>
+})
+      </div>
+    </div>
+    <div class="box-info"><strong>Ordre important :</strong> <code>connectDB()</code> est <code>await</code>é — le serveur ne démarre pas tant que Mongo n'est pas joignable. Cassandra et Neo4j sont dans des <code>try/catch</code> pour rester non-bloquants.</div>
+  </div>
+
+  <h2 class="section-title">Étape 6 — Côté client <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon cyan">⚛️</div><div><div class="card-title">client/src/services/recommendationService.js</div><div class="card-subtitle">Créer ce fichier</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · client/src/services/recommendationService.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> _json = res =&gt; res.<span class="f">json</span>().<span class="f">then</span>(d =&gt; { <span class="k">if</span> (!d.success) <span class="k">throw new</span> <span class="f">Error</span>(d.error); <span class="k">return</span> d.data })<br><br>
+<span class="k">export const</span> getSimilarProducts = (productId) =&gt;<br>
+&nbsp;&nbsp;<span class="f">fetch</span>(`/api/recommendations/${productId}`).<span class="f">then</span>(_json)<br><br>
+<span class="k">export const</span> getAlsoViewed = (productId) =&gt;<br>
+&nbsp;&nbsp;<span class="f">fetch</span>(`/api/recommendations/${productId}/also-viewed`).<span class="f">then</span>(_json)
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:0">
+    <div class="card-header"><div class="card-icon cyan">🧩</div><div><div class="card-title">client/src/components/product/SimilarProducts.jsx</div><div class="card-subtitle">Créer ce fichier</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">jsx · client/src/components/product/SimilarProducts.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">import</span> { useEffect, useState } <span class="k">from</span> <span class="s">'react'</span><br>
+<span class="k">import</span> { Link } <span class="k">from</span> <span class="s">'react-router-dom'</span><br>
+<span class="k">import</span> { getSimilarProducts } <span class="k">from</span> <span class="s">'../../services/recommendationService'</span><br>
+<span class="k">import</span> { formatPrice } <span class="k">from</span> <span class="s">'../../utils/formatters'</span><br><br>
+<span class="k">export default function</span> <span class="f">SimilarProducts</span>({ productId }) {<br>
+&nbsp;&nbsp;<span class="k">const</span> [items, setItems] = <span class="f">useState</span>([])<br><br>
+&nbsp;&nbsp;<span class="f">useEffect</span>(() =&gt; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">if</span> (!productId) <span class="k">return</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="f">getSimilarProducts</span>(productId).<span class="f">then</span>(setItems).<span class="f">catch</span>(() =&gt; {})<br>
+&nbsp;&nbsp;}, [productId])<br><br>
+&nbsp;&nbsp;<span class="k">if</span> (!items.length) <span class="k">return null</span><br><br>
+&nbsp;&nbsp;<span class="k">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;section className=<span class="s">"mt-16"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;h2 className=<span class="s">"font-bold text-xl mb-6"</span>&gt;Produits similaires&lt;/h2&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"grid grid-cols-2 sm:grid-cols-4 gap-4"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{items.<span class="f">map</span>(p =&gt; (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Link key={p.id} to={`/produit/${p.id}`}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;className=<span class="s">"group flex flex-col bg-soft-cloud overflow-hidden"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"aspect-square overflow-hidden"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;img src={p.image} alt={p.name}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;className=<span class="s">"w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loading=<span class="s">"lazy"</span> /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"p-3 flex flex-col gap-1"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;h3 className=<span class="s">"font-semibold text-sm leading-tight line-clamp-2"</span>&gt;{p.name}&lt;/h3&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span className=<span class="s">"font-bold text-sm"</span>&gt;{<span class="f">formatPrice</span>(p.price)}&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/Link&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;))}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/section&gt;<br>
+&nbsp;&nbsp;)<br>
+}
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:0">
+    <div class="card-header"><div class="card-icon cyan">📄</div><div><div class="card-title">client/src/pages/ProductPage.jsx</div><div class="card-subtitle">Modifier — ajouter recordView + SimilarProducts</div></div></div>
+    <p>Deux modifications dans la page produit : enregistrer la vue Cassandra au montage, et afficher le composant Neo4j en bas de page.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">jsx · ProductPage.jsx — imports à ajouter</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">import</span> SimilarProducts <span class="k">from</span> <span class="s">'../components/product/SimilarProducts'</span><br>
+<span class="k">import</span> { recordView } <span class="k">from</span> <span class="s">'../services/analyticsService'</span>
+      </div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">jsx · ProductPage.jsx — dans le composant</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// Juste avant le useEffect de chargement du produit :</span><br>
+<span class="f">useEffect</span>(() =&gt; {<br>
+&nbsp;&nbsp;<span class="f">recordView</span>(id).<span class="f">catch</span>(() =&gt; {})  <span class="c">// fire-and-forget, Cassandra optionnel</span><br>
+}, [id])<br><br>
+<span class="c">// En bas du JSX retourné (après ProductReviews) :</span><br>
+&lt;<span class="f">SimilarProducts</span> productId={id} /&gt;
+      </div>
+    </div>
+    <div class="box-success"><strong>Résultat attendu :</strong> chaque visite d'une fiche produit incrémente les compteurs Cassandra <em>et</em> la section « Produits similaires » (Neo4j) s'affiche sous les avis. Les deux phases travaillent en parallèle.</div>
+  </div>
+
+  <!-- ══════════ EXERCICES ══════════ -->
+  <h2 class="section-title" style="margin-top:48px">🏋️ Exercices <span class="line"></span></h2>
+
+  <div class="card">
+    <div class="card-header"><div class="card-icon neo" style="background:rgba(124,58,237,.2);font-size:.9rem;font-weight:700;color:var(--neo-l);">Ex 1</div><div><div class="card-title">Exploration dans le Browser</div><div class="card-subtitle">Niveau découverte · ~10 min · Neo4j Browser</div></div></div>
+    <p>Après avoir démarré le serveur et vérifié que le seed s'est exécuté, ouvre le <strong>Neo4j Browser</strong> et réponds à ces questions en écrivant les requêtes Cypher correspondantes :</p>
+    <ol style="color:var(--text-muted);font-size:.88rem;padding-left:20px;line-height:2.2">
+      <li>Combien de nœuds <code>:Product</code> le graphe contient-il ? (<em>Piste : <code>MATCH (p:Product) RETURN count(p)</code></em>)</li>
+      <li>Liste toutes les catégories distinctes (<code>:Category</code>) avec leur nom.</li>
+      <li>Affiche les 5 premiers produits de la catégorie <code>running</code>.</li>
+      <li>Affiche le graphe complet en limitant à 50 nœuds (<code>MATCH (n) RETURN n LIMIT 50</code>). Observe le dessin.</li>
+      <li>Combien de relations <code>:IN_CATEGORY</code> existent ?</li>
+    </ol>
+    <div class="box-info"><strong>Vérification :</strong> le nombre de produits doit correspondre à la longueur du tableau dans <code>data/products.json</code>.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-icon neo" style="background:rgba(124,58,237,.2);font-size:.9rem;font-weight:700;color:var(--neo-l);">Ex 2</div><div><div class="card-title">Tester les routes via curl</div><div class="card-subtitle">Niveau intermédiaire · ~10 min · Terminal</div></div></div>
+    <p>Le serveur tourne (<code>npm run dev</code> dans <code>server/</code>). Utilise <code>curl</code> (ou Postman) pour tester les 3 routes :</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash · tests curl</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c"># Remplace l'id par un id réel de ton catalogue</span><br>
+curl http://localhost:3001/api/recommendations/&lt;id-produit&gt;<br><br>
+<span class="c"># Route co-vus (vide au début, normal — pas encore de sessions)</span><br>
+curl http://localhost:3001/api/recommendations/&lt;id-produit&gt;/also-viewed<br><br>
+<span class="c"># Health check — vérifie l'état de toutes les connexions</span><br>
+curl http://localhost:3001/api/health
+      </div>
+    </div>
+    <ol style="color:var(--text-muted);font-size:.88rem;padding-left:20px;line-height:2.2">
+      <li>La première route renvoie-t-elle des produits ? Combien ?</li>
+      <li>La route <code>also-viewed</code> renvoie un tableau vide — pourquoi ? (cf. Exercice 3)</li>
+      <li>Que voit-on dans <code>/api/health</code> pour les champs <code>mongo</code> et <code>redis</code> ?</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-icon amber" style="background:rgba(245,158,11,.2);font-size:.9rem;font-weight:700;color:var(--amber);">Ex 3</div><div><div class="card-title">Seeder des sessions :VIEWED dans le Browser</div><div class="card-subtitle">Niveau intermédiaire · ~15 min · Cypher</div></div></div>
+    <p>La recommandation collaborative nécessite des données de navigation. Crée manuellement des sessions fictives dans le Browser pour simuler des visites :</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cypher · à coller dans le Browser</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// Récupère 2 id réels depuis ton catalogue (adapte les valeurs)</span><br>
+<span class="k">MATCH</span> (p1:<span class="p">Product</span>), (p2:<span class="p">Product</span>)<br>
+<span class="k">WHERE</span> p1.id &lt;&gt; p2.id<br>
+<span class="k">WITH</span> p1, p2 <span class="k">LIMIT</span> <span class="n">6</span><br>
+<span class="k">MERGE</span> (s:<span class="p">Session</span> {id: <span class="s">'sess-demo-1'</span>})<br>
+<span class="k">MERGE</span> (s)-[:<span class="p">VIEWED</span>]-&gt;(p1)<br>
+<span class="k">MERGE</span> (s)-[:<span class="p">VIEWED</span>]-&gt;(p2)
+      </div>
+    </div>
+    <ol style="color:var(--text-muted);font-size:.88rem;padding-left:20px;line-height:2.2">
+      <li>Crée 3 sessions différentes (<code>sess-demo-1</code>, <code>sess-demo-2</code>, <code>sess-demo-3</code>), chacune ayant vu 2 ou 3 produits communs.</li>
+      <li>Reteste <code>curl .../also-viewed</code> pour un des produits seedés — tu dois maintenant voir des résultats.</li>
+      <li>Dans le Browser, écris la requête Cypher de recommandation collaborative et vérifie qu'elle renvoie les mêmes résultats que l'API.</li>
+    </ol>
+    <div class="box-neo">Résultat attendu : la route <code>/also-viewed</code> renvoie les produits vus dans les mêmes sessions, triés par <code>score</code> décroissant.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-icon green" style="background:rgba(16,185,129,.2);font-size:.9rem;font-weight:700;color:var(--green);">Ex 4</div><div><div class="card-title">Enregistrer une vue dans le graphe (Neo4j)</div><div class="card-subtitle">Niveau avancé · ~20 min · Node.js + Cypher</div></div></div>
+    <p>Actuellement, les nœuds <code>:Session</code> ne sont créés qu'à la main. L'objectif est d'enregistrer automatiquement une vue à chaque visite de fiche produit, <strong>en plus</strong> de Cassandra.</p>
+    <ol style="color:var(--text-muted);font-size:.88rem;padding-left:20px;line-height:2.2">
+      <li>Ajoute une fonction <code>recordProductView(productId, sessionId)</code> dans <code>server/services/recommendationService.js</code>.<br>
+        Elle doit <code>MERGE</code> un nœud <code>:Session {id: sessionId}</code> et une relation <code>[:VIEWED]</code> vers le produit.</li>
+      <li>Ajoute une route <code>POST /api/recommendations/view</code> dans <code>routes/recommendations.js</code> qui appelle cette fonction.</li>
+      <li>Dans <code>client/src/services/recommendationService.js</code>, exporte une fonction <code>recordViewGraph(productId)</code> qui appelle cette route avec le <code>sessionId</code> (récupéré via <code>getSessionId()</code> de <code>../utils/helpers</code>).</li>
+      <li>Appelle <code>recordViewGraph(id)</code> dans <code>ProductPage.jsx</code> (en parallèle de <code>recordView</code> pour Cassandra).</li>
+      <li>Navigue sur 3 fiches produits différentes, puis vérifie dans le Browser que des nœuds <code>:Session</code> et des relations <code>:VIEWED</code> ont été créés.</li>
+    </ol>
+    <div class="box-success">La recommendation collaborative est maintenant alimentée par les vraies sessions de navigation. Teste la route <code>/also-viewed</code> après avoir visité plusieurs produits.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-icon blue" style="background:rgba(59,130,246,.2);font-size:.9rem;font-weight:700;color:var(--primary);">Ex 5</div><div><div class="card-title">Requête en profondeur 2 — « amis des amis »</div><div class="card-subtitle">Niveau avancé · ~15 min · Cypher pur</div></div></div>
+    <p>La recommandation structurelle actuelle cherche les produits de la <strong>même catégorie</strong> (1 saut). Enrichis-la avec une requête à <strong>2 sauts</strong> : produits de la même catégorie que les produits co-vus.</p>
+    <ol style="color:var(--text-muted);font-size:.88rem;padding-left:20px;line-height:2.2">
+      <li>Dans le Browser, écris la requête Cypher qui, pour un produit <code>$id</code>, trouve les produits de la même catégorie que les co-vus (2 sauts : <code>Product → Category ← Product ← Session → Product</code>).</li>
+      <li>Ajoute une fonction <code>getDeepRecommendations(productId, limit)</code> dans <code>recommendationService.js</code> qui exécute cette requête et déduplique les résultats.</li>
+      <li>Ajoute la route <code>GET /api/recommendations/:id/deep</code> et teste-la avec curl.</li>
+    </ol>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cypher · piste pour la requête profondeur 2</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">MATCH</span> (p:<span class="p">Product</span> {id: $id})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-[:<span class="p">IN_CATEGORY</span>]-&gt;(:<span class="p">Category</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;-[:<span class="p">IN_CATEGORY</span>]-(cocat:<span class="p">Product</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;-[:<span class="p">VIEWED</span>]-(:<span class="p">Session</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-[:<span class="p">VIEWED</span>]-&gt;(reco:<span class="p">Product</span>)<br>
+<span class="k">WHERE</span> reco.id &lt;&gt; $id <span class="k">AND</span> cocat.id &lt;&gt; $id<br>
+<span class="k">RETURN DISTINCT</span> reco.id, reco.name<br>
+<span class="k">LIMIT</span> $limit
+      </div>
+    </div>
+    <div class="box-warning">La requête profondeur 2 peut être lente sur un grand graphe sans index. En production, on limite le nombre de sauts et on utilise GDS (Graph Data Science) pour les algorithmes de similarité à grande échelle.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-icon danger" style="background:rgba(239,68,68,.15);font-size:.9rem;font-weight:700;color:var(--danger);">Ex 6</div><div><div class="card-title">Bonus — Contraintes & index</div><div class="card-subtitle">Niveau expert · ~15 min · Administration Neo4j</div></div></div>
+    <p>Le script <code>seedGraph.js</code> crée des contraintes d'unicité, mais Neo4j peut faire plus. Explore les commandes d'administration :</p>
+    <ol style="color:var(--text-muted);font-size:.88rem;padding-left:20px;line-height:2.2">
+      <li>Dans le Browser, exécute <code>SHOW CONSTRAINTS</code> — liste les contraintes créées par le seed.</li>
+      <li>Crée un index sur la propriété <code>name</code> des produits pour accélérer les recherches par nom :<br>
+        <code>CREATE INDEX product_name_idx IF NOT EXISTS FOR (p:Product) ON (p.name)</code></li>
+      <li>Vérifie avec <code>SHOW INDEXES</code> que l'index est bien créé et actif (<code>ONLINE</code>).</li>
+      <li>Utilise <code>EXPLAIN</code> devant une requête <code>MATCH (p:Product {name: 'Nike'})</code> pour voir si l'index est utilisé dans le plan d'exécution.</li>
+      <li><strong>Nettoyage :</strong> écris la commande pour supprimer tous les nœuds <code>:Session</code> et leurs relations (utile pour recommencer les exercices 3 et 4 à zéro).</li>
+    </ol>
+    <div class="box-neo"><code>MATCH (s:Session) DETACH DELETE s</code> — <code>DETACH DELETE</code> supprime le nœud <strong>et</strong> toutes ses relations. Sans <code>DETACH</code>, Neo4j refuse de supprimer un nœud qui a encore des relations.</div>
+  </div>
+
+</div><!-- /tab-tp -->
+
+<!-- ══════════════════════════════ SOLUTIONS ═════════════════════════ -->
+<div id="tab-solutions" class="tab-content">
+  <div class="progress-track"><div class="progress-fill" style="width:71%"></div></div>
+
+  <div class="section-hero" style="border-color:rgba(124,58,237,.2);background:linear-gradient(135deg,#190f2b,#1e1433)">
+    <div class="section-hero-icon">✅</div>
+    <h1>Solution <span>recommendationService</span></h1>
+    <p>Code final validé. Essaie d'abord — ne regarde ici qu'en cas de blocage.</p>
+  </div>
+
+  <h2 class="section-title">server/scripts/seedGraph.js <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · seed du graphe</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> driver = <span class="f">require</span>(<span class="s">'../config/neo4j'</span>)<br>
+<span class="k">const</span> products = <span class="f">require</span>(<span class="s">'../../data/products.json'</span>)<br><br>
+<span class="k">async function</span> <span class="f">seedGraph</span>() {<br>
+&nbsp;&nbsp;<span class="k">const</span> session = driver.<span class="f">session</span>()<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">for</span> (<span class="k">const</span> p <span class="k">of</span> products) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">run</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`<span class="k">MERGE</span> (c:Category {name: $category})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">MERGE</span> (p:Product {id: $id})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">SET</span> p.name = $name, p.price = $price<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">MERGE</span> (p)-[:IN_CATEGORY]-&gt;(c)`,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ id: p.id, name: p.name, price: p.price, category: p.category }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">log</span>(`🌱 ${products.length} produits dans le graphe`)<br>
+&nbsp;&nbsp;} <span class="k">finally</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">close</span>()<br>
+&nbsp;&nbsp;}<br>
+}<br>
+module.exports = seedGraph
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">server/services/recommendationService.js <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · solution complète</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> neo4j = <span class="f">require</span>(<span class="s">'neo4j-driver'</span>)<br>
+<span class="k">const</span> driver = <span class="f">require</span>(<span class="s">'../config/neo4j'</span>)<br><br>
+<span class="k">async function</span> <span class="f">getSimilarProducts</span>(productId, limit = <span class="n">4</span>) {<br>
+&nbsp;&nbsp;<span class="k">const</span> session = driver.<span class="f">session</span>()<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> result = <span class="k">await</span> session.<span class="f">run</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`<span class="k">MATCH</span> (p:Product {id: $id})-[:IN_CATEGORY]-&gt;(:Category)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;-[:IN_CATEGORY]-(reco:Product)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">WHERE</span> reco.id &lt;&gt; $id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">RETURN</span> reco.id <span class="k">AS</span> id, reco.name <span class="k">AS</span> name, reco.price <span class="k">AS</span> price<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">LIMIT</span> $limit`,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ id: productId, limit: neo4j.<span class="f">int</span>(limit) }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> result.records.<span class="f">map</span>(r => ({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">id</span>: r.<span class="f">get</span>(<span class="s">'id'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">name</span>: r.<span class="f">get</span>(<span class="s">'name'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">price</span>: r.<span class="f">get</span>(<span class="s">'price'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}))<br>
+&nbsp;&nbsp;} <span class="k">finally</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">close</span>()<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">getAlsoViewed</span>(productId, limit = <span class="n">4</span>) {<br>
+&nbsp;&nbsp;<span class="k">const</span> session = driver.<span class="f">session</span>()<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> result = <span class="k">await</span> session.<span class="f">run</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`<span class="k">MATCH</span> (p:Product {id: $id})&lt;-[:VIEWED]-(:Session)-[:VIEWED]-&gt;(reco:Product)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">WHERE</span> reco.id &lt;&gt; $id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">RETURN</span> reco.id <span class="k">AS</span> id, reco.name <span class="k">AS</span> name,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">count</span>(*) <span class="k">AS</span> score<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">ORDER BY</span> score <span class="k">DESC</span> <span class="k">LIMIT</span> $limit`,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ id: productId, limit: neo4j.<span class="f">int</span>(limit) }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> result.records.<span class="f">map</span>(r => ({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">id</span>: r.<span class="f">get</span>(<span class="s">'id'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">name</span>: r.<span class="f">get</span>(<span class="s">'name'</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">score</span>: r.<span class="f">get</span>(<span class="s">'score'</span>).<span class="f">toNumber</span>(),  <span class="c">// Integer Neo4j → Number</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;}))<br>
+&nbsp;&nbsp;} <span class="k">finally</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">close</span>()<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+module.exports = { getSimilarProducts, getAlsoViewed }
+      </div>
+    </div>
+    <div class="box-warning"><strong>Pièges du driver :</strong> les entiers passés en paramètre <code>LIMIT</code> doivent être wrappés avec <code>neo4j.int(...)</code>, et les entiers renvoyés (<code>count(*)</code>) sont des objets <code>Integer</code> → utilise <code>.toNumber()</code>. Pense aussi à <code>require('neo4j-driver')</code> en haut pour accéder à <code>neo4j.int</code>.</div>
+  </div>
+
+  <h2 class="section-title">server/routes/recommendations.js <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · solution complète</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> express = <span class="f">require</span>(<span class="s">'express'</span>)<br>
+<span class="k">const</span> { getSimilarProducts, getAlsoViewed } = <span class="f">require</span>(<span class="s">'../services/recommendationService'</span>)<br>
+<span class="k">const</span> router = express.<span class="f">Router</span>()<br><br>
+router.<span class="f">get</span>(<span class="s">'/:id'</span>, <span class="k">async</span> (req, res, next) =&gt; {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> data = <span class="k">await</span> <span class="f">getSimilarProducts</span>(req.params.id)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ success: <span class="k">true</span>, data })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+router.<span class="f">get</span>(<span class="s">'/:id/also-viewed'</span>, <span class="k">async</span> (req, res, next) =&gt; {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> data = <span class="k">await</span> <span class="f">getAlsoViewed</span>(req.params.id)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ success: <span class="k">true</span>, data })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+module.exports = router
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">client/src/services/recommendationService.js <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · solution complète</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> _json = res =&gt; res.<span class="f">json</span>().<span class="f">then</span>(d =&gt; { <span class="k">if</span> (!d.success) <span class="k">throw new</span> <span class="f">Error</span>(d.error); <span class="k">return</span> d.data })<br><br>
+<span class="k">export const</span> getSimilarProducts = (productId) =&gt;<br>
+&nbsp;&nbsp;<span class="f">fetch</span>(`/api/recommendations/${productId}`).<span class="f">then</span>(_json)<br><br>
+<span class="k">export const</span> getAlsoViewed = (productId) =&gt;<br>
+&nbsp;&nbsp;<span class="f">fetch</span>(`/api/recommendations/${productId}/also-viewed`).<span class="f">then</span>(_json)
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Solution Ex 4 — recordProductView <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · ajout dans recommendationService.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// Enregistre une vue dans le graphe (crée :Session et :VIEWED)</span><br>
+<span class="k">async function</span> <span class="f">recordProductView</span>(productId, sessionId) {<br>
+&nbsp;&nbsp;<span class="k">const</span> session = driver.<span class="f">session</span>()<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> session.<span class="f">run</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`<span class="k">MERGE</span> (s:<span class="p">Session</span> {id: $sessionId})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">MERGE</span> (p:<span class="p">Product</span>  {id: $productId})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">MERGE</span> (s)-[:<span class="p">VIEWED</span>]-&gt;(p)`,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ sessionId, productId }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;} <span class="k">finally</span> { <span class="k">await</span> session.<span class="f">close</span>() }<br>
+}<br><br>
+module.exports = { getSimilarProducts, getAlsoViewed, recordProductView }
+      </div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · route POST à ajouter dans recommendations.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> { getSimilarProducts, getAlsoViewed, recordProductView } = <span class="f">require</span>(<span class="s">'../services/recommendationService'</span>)<br><br>
+router.<span class="f">post</span>(<span class="s">'/view'</span>, <span class="k">async</span> (req, res, next) =&gt; {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> { productId, sessionId } = req.body<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">if</span> (!productId || !sessionId)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> res.<span class="f">status</span>(<span class="n">400</span>).<span class="f">json</span>({ success: <span class="k">false</span>, error: <span class="s">'productId et sessionId requis'</span> })<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> <span class="f">recordProductView</span>(productId, sessionId)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ success: <span class="k">true</span> })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">server/server.js — solution complète Phase 4 <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/server.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> app           = <span class="f">require</span>(<span class="s">'./app'</span>)<br>
+<span class="k">const</span> { connectDB } = <span class="f">require</span>(<span class="s">'./config/database'</span>)<br>
+<span class="k">const</span> { PORT }      = <span class="f">require</span>(<span class="s">'./config/env'</span>)<br>
+<span class="k">const</span> neo4jDriver   = <span class="f">require</span>(<span class="s">'./config/neo4j'</span>)<br>
+<span class="k">const</span> seedGraph     = <span class="f">require</span>(<span class="s">'./scripts/seedGraph'</span>)<br>
+<span class="k">const</span> initCassandra = <span class="f">require</span>(<span class="s">'./scripts/initCassandra'</span>)<br><br>
+<span class="f">require</span>(<span class="s">'./config/redis'</span>)<br><br>
+<span class="k">async function</span> <span class="f">start</span>() {<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">connectDB</span>()<br>
+&nbsp;&nbsp;<span class="k">try</span> { <span class="k">await</span> <span class="f">initCassandra</span>() }<br>
+&nbsp;&nbsp;<span class="k">catch</span> (e) { console.<span class="f">error</span>(<span class="s">'⚠️ Cassandra non prête :'</span>, e.message) }<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> neo4jDriver.<span class="f">verifyConnectivity</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">await</span> <span class="f">seedGraph</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">log</span>(<span class="s">'✅ Neo4j connecté'</span>)<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (e) { console.<span class="f">error</span>(<span class="s">'⚠️ Neo4j non disponible :'</span>, e.message) }<br>
+&nbsp;&nbsp;app.<span class="f">listen</span>(PORT, () =&gt; console.<span class="f">log</span>(`🚀 http://localhost:${PORT}/api/health`))<br>
+}<br><br>
+start().<span class="f">catch</span>(err =&gt; { console.<span class="f">error</span>(err.message); process.<span class="f">exit</span>(<span class="n">1</span>) })<br><br>
+process.<span class="f">on</span>(<span class="s">'SIGINT'</span>, <span class="k">async</span> () =&gt; { <span class="k">await</span> neo4jDriver.<span class="f">close</span>(); process.<span class="f">exit</span>(<span class="n">0</span>) })
+      </div>
+    </div>
+    <div class="box-info"><strong>Pense à fermer le driver</strong> à l'arrêt du serveur : <code>process.on('SIGINT', () => driver.close())</code>.</div>
+  </div>
+</div><!-- /tab-solutions -->
+
+<!-- ══════════════════════════════════ RECAP ═════════════════════════ -->
+<div id="tab-recap" class="tab-content">
+  <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">📋</div>
+    <h1>Phase 4 — <span>Récap</span></h1>
+    <p>Graphe produit en place, recommandations « similaires » sous chaque fiche. Le parcours NoSQL de SportShopy est complet : 4 bases, 4 modèles.</p>
+  </div>
+
+  <h2 class="section-title">✅ Checklist avant le merge <span class="line"></span></h2>
+  <div class="card">
+    <ul class="checklist" style="gap:14px">
+      <li>La base locale est démarrée dans Neo4j Desktop (Start ▶)</li>
+      <li>Le Browser ouvre et accepte la connexion (neo4j / ton mot de passe)</li>
+      <li><code>MATCH (n) RETURN n</code> affiche le graphe seedé (produits + catégories)</li>
+      <li>Le seed crée bien les relations <code>:IN_CATEGORY</code> sans doublon (MERGE)</li>
+      <li><code>GET /api/recommendations/:id</code> renvoie des produits similaires</li>
+      <li>SimilarProducts s'affiche en bas de la fiche produit</li>
+      <li>Le serveur démarre même si Neo4j n'est pas dispo (non-bloquant)</li>
+      <li class="warn">Le driver est fermé proprement à l'arrêt (SIGINT)</li>
+    </ul>
+  </div>
+
+  <h2 class="section-title">⚡ Cheatsheet Cypher + neo4j-driver <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Cypher · Cheatsheet</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// ── ÉCRITURE ──────────────────────────────────────────</span><br>
+CREATE (n:Label {prop: val})         // crée (peut dupliquer)<br>
+MERGE  (n:Label {key: val})          // crée si absent, sinon match<br>
+MATCH (a),(b) CREATE (a)-[:REL]->(b) // relation<br>
+SET n.prop = val                     // ajoute/modifie une propriété<br><br>
+<span class="c">// ── LECTURE ───────────────────────────────────────────</span><br>
+MATCH (n:Label) RETURN n<br>
+MATCH (a)-[:REL]->(b) RETURN b       // traversée<br>
+MATCH (a)-[:R]->()-[:R]->(c) ...     // 2 sauts<br>
+WHERE n.prop <> $x   RETURN ... LIMIT $n<br><br>
+<span class="c">// ── DRIVER NODE ───────────────────────────────────────</span><br>
+const s = driver.session()<br>
+await s.run(cypher, { id, limit: neo4j.int(4) })<br>
+result.records.map(r => r.get('name'))<br>
+r.get('score').toNumber()   // Integer Neo4j → Number<br>
+await s.close()
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">🗺️ Progression du projet <span class="line"></span></h2>
+  <div class="card">
+    <table class="compare-table">
+      <thead><tr><th>Phase</th><th>Base</th><th>Modèle</th><th>Usage SportShopy</th><th>Statut</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>MongoDB</td><td>Document</td><td>Catalogue produits</td><td><span class="badge-yes">✓ mergé</span></td></tr>
+        <tr><td>2</td><td>Redis</td><td>Clé-Valeur</td><td>Panier (TTL 24h)</td><td><span class="badge-yes">✓ mergé</span></td></tr>
+        <tr><td>3</td><td>Cassandra</td><td>Wide-Column</td><td>Analytics / séries temporelles</td><td><span class="badge-yes">✓ mergé</span></td></tr>
+        <tr><td>4</td><td>Neo4j</td><td>Graphe</td><td>Recommandations produits</td><td><span class="badge-partial">⟳ en cours</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div><!-- /tab-recap -->
+
+<!-- ══════════════════════════════════ GLOSSAIRE ═════════════════════ -->
+<div id="tab-glossaire" class="tab-content">
+  <div class="section-hero">
+    <div class="section-hero-icon">📖</div>
+    <h1>Glossaire <span>Neo4j</span></h1>
+    <p>20 termes essentiels du modèle graphe et du langage Cypher.</p>
+  </div>
+  <div class="glossary-grid">
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">01</span>Nœud (Node)</div><div class="gl-def">Entité du graphe (un produit, une catégorie). Porte des labels et des propriétés.</div><span class="gl-tag concept">concept</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">02</span>Relation</div><div class="gl-def">Lien <strong>orienté et typé</strong> entre deux nœuds (<code>:IN_CATEGORY</code>). Peut porter des propriétés.</div><span class="gl-tag concept">concept</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">03</span>Propriété</div><div class="gl-def">Paire clé-valeur sur un nœud ou une relation (<code>price: 129.99</code>).</div><span class="gl-tag concept">concept</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">04</span>Label</div><div class="gl-def">« Type » d'un nœud (<code>:Product</code>). Sert à cibler et indexer. Un nœud peut en avoir plusieurs.</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">05</span>Cypher</div><div class="gl-def">Langage de requête de Neo4j, descriptif et visuel (« ASCII-art » des motifs).</div><span class="gl-tag cypher">cypher</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">06</span>Pattern</div><div class="gl-def">Motif décrivant nœuds et relations : <code>(a)-[:R]-&gt;(b)</code>. Cœur de toute requête Cypher.</div><span class="gl-tag cypher">cypher</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">07</span>MATCH</div><div class="gl-def">Recherche des motifs existants dans le graphe (équivalent du SELECT).</div><span class="gl-tag cypher">cypher</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">08</span>CREATE</div><div class="gl-def">Crée des nœuds/relations. <strong>Attention</strong> : peut créer des doublons si mal utilisé.</div><span class="gl-tag cypher">cypher</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">09</span>MERGE</div><div class="gl-def">« CREATE si absent, sinon MATCH ». Idéal pour seeder sans doublon.</div><span class="gl-tag cypher">cypher</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">10</span>RETURN</div><div class="gl-def">Définit ce que la requête renvoie (propriétés, nœuds, agrégats).</div><span class="gl-tag cypher">cypher</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">11</span>SET</div><div class="gl-def">Ajoute ou modifie une propriété sur un nœud/relation.</div><span class="gl-tag cypher">cypher</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">12</span>Traversée</div><div class="gl-def">Parcours des relations pour atteindre des nœuds liés. L'opération native (et rapide) du graphe.</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">13</span>Direction</div><div class="gl-def">Sens d'une relation : <code>-&gt;</code>, <code>&lt;-</code> ou non orienté <code>-</code> dans le motif.</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">14</span>Degré</div><div class="gl-def">Nombre de relations d'un nœud. Un fort degré peut signaler un produit « hub ».</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">15</span>Bolt</div><div class="gl-def">Protocole binaire de Neo4j (port <code>7687</code>) utilisé par les drivers comme neo4j-driver.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">16</span>Neo4j Desktop</div><div class="gl-def">Application gratuite tout-en-un : moteur + Browser + visualisation, pour un usage local sans Docker.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">17</span>Neo4j Browser</div><div class="gl-def">Interface web intégrée (port <code>7474</code>) : console Cypher + visualisation de graphe.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">18</span>Session / Driver</div><div class="gl-def">Le <code>driver</code> (un seul, pool de connexions) ouvre des <code>session</code> courtes par requête.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">19</span>cypher-shell</div><div class="gl-def">Shell Cypher en terminal fourni avec l'installation serveur — l'équivalent de cqlsh pour Cassandra.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">20</span>GDS / APOC</div><div class="gl-def">Bibliothèques avancées : Graph Data Science (similarité, PageRank) et APOC (procédures utilitaires).</div><span class="gl-tag archi">archi</span></div>
+  </div>
+</div><!-- /tab-glossaire -->
+
+<!-- ══════════════════════════════════ QUIZ ══════════════════════════ -->
+<div id="tab-quiz" class="tab-content">
+  <div class="section-hero">
+    <div class="section-hero-icon">🎯</div>
+    <h1>Questionnaire <span>Neo4j</span></h1>
+    <p>8 questions, une à la fois, avec correction explicative. Valide ta compréhension du modèle graphe.</p>
+  </div>
+  <div id="quiz-mount"></div>
+</div><!-- /tab-quiz -->
+
+</main>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── QUIZ ──────────────────────────────────────────────── */
+const QUESTIONS = [
+  {
+    q: "Dans le modèle graphe de Neo4j, qu'est-ce qu'une relation ?",
+    options: [
+      "Une table de jointure entre deux entités",
+      "Un lien orienté et typé entre deux nœuds, pouvant porter des propriétés",
+      "Une colonne indexée",
+      "Un document imbriqué"
+    ],
+    correct: 1,
+    expl: "Une relation connecte deux nœuds avec un type (ex. :IN_CATEGORY) et une direction. Elle peut elle-même porter des propriétés (poids, date…)."
+  },
+  {
+    q: "Pourquoi Neo4j est-il pertinent pour les recommandations plutôt que SQL ?",
+    options: [
+      "Parce qu'il garde tout en RAM",
+      "Parce qu'il parcourt nativement les relations (traversées) là où SQL multiplie des jointures coûteuses",
+      "Parce qu'il n'a pas de schéma du tout",
+      "Parce qu'il compresse mieux les données"
+    ],
+    correct: 1,
+    expl: "Recommander = suivre des chaînes de relations. Le graphe traverse ces liens nativement, tandis que SQL doit enchaîner des jointures de plus en plus lentes en profondeur."
+  },
+  {
+    q: "Comment écrit-on un nœud Product avec un label en Cypher ?",
+    options: [
+      "{ Product: { ... } }",
+      "[Product { ... }]",
+      "(p:Product { id: 'p-run-001' })",
+      "<Product id='p-run-001'>"
+    ],
+    correct: 2,
+    expl: "Un nœud s'écrit entre parenthèses : (variable:Label { propriétés }). Les relations, elles, s'écrivent entre crochets fléchés -[:TYPE]->."
+  },
+  {
+    q: "Quelle est la différence entre CREATE et MERGE ?",
+    options: [
+      "Aucune, ce sont des synonymes",
+      "CREATE lit, MERGE écrit",
+      "CREATE crée toujours (risque de doublon) ; MERGE crée seulement si le motif n'existe pas",
+      "MERGE supprime les nœuds existants"
+    ],
+    correct: 2,
+    expl: "MERGE = 'CREATE si absent, sinon MATCH'. C'est ce qu'on utilise pour seeder un graphe de façon idempotente, sans recréer des nœuds déjà présents."
+  },
+  {
+    q: "Dans Neo4j Desktop, où définit-on le mot de passe utilisé ensuite par le serveur Node ?",
+    options: [
+      "Dans le fichier docker-compose.yml",
+      "À la création de la base locale (Local DBMS) — il est réutilisé dans NEO4J_PASSWORD",
+      "Il n'y a pas de mot de passe en local",
+      "Uniquement dans le code du driver"
+    ],
+    correct: 1,
+    expl: "En Neo4j Desktop, le mot de passe est fixé au moment de créer la base locale (Local DBMS). C'est celui-ci, avec l'utilisateur neo4j, qu'on reporte dans server/.env (NEO4J_PASSWORD)."
+  },
+  {
+    q: "Que renvoie ce motif : (p:Product {id:$id})<-[:VIEWED]-(:Session)-[:VIEWED]->(reco) ?",
+    options: [
+      "Les catégories du produit p",
+      "Les produits vus dans les mêmes sessions que p (co-vus)",
+      "Le prix moyen des produits",
+      "Les sessions les plus longues"
+    ],
+    correct: 1,
+    expl: "On part de p, on remonte vers les sessions qui l'ont vu, puis on redescend vers les autres produits vus dans ces sessions : c'est la recommandation 'souvent vus ensemble'."
+  },
+  {
+    q: "Avec neo4j-driver, comment gère-t-on les entiers renvoyés par count(*) ?",
+    options: [
+      "Ils sont déjà des Number JavaScript",
+      "Ce sont des objets Integer Neo4j : on utilise .toNumber()",
+      "Il faut les parser avec JSON.parse",
+      "On les ignore"
+    ],
+    correct: 1,
+    expl: "Neo4j manipule des entiers 64 bits ; le driver les renvoie comme objets Integer. On appelle .toNumber() pour les convertir (et neo4j.int() pour les passer en paramètre)."
+  },
+  {
+    q: "Quel est le bon cycle de vie du driver et des sessions ?",
+    options: [
+      "Un driver et une session par requête, fermés à chaque fois",
+      "Un seul driver pour toute l'app, une session courte ouverte puis fermée par requête",
+      "Une session permanente jamais fermée",
+      "Un driver par utilisateur connecté"
+    ],
+    correct: 1,
+    expl: "Le driver (coûteux, pool de connexions) est créé une fois pour toute l'application. Les sessions sont légères : on en ouvre une par requête et on la ferme aussitôt (finally)."
+  }
+];
+
+let qIndex = 0, qScore = 0, answered = false;
+
+function renderQuestion() {
+  const mount = document.getElementById('quiz-mount');
+  if (qIndex >= QUESTIONS.length) { renderScore(); return; }
+  const item = QUESTIONS[qIndex];
+  answered = false;
+  const pct = Math.round((qIndex / QUESTIONS.length) * 100);
+  mount.innerHTML = `
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-counter">Q${qIndex + 1} / ${QUESTIONS.length}</span>
+        <div class="q-mini-bar"><div class="q-mini-fill" style="width:${pct}%"></div></div>
+        <span class="q-counter">Score ${qScore}</span>
+      </div>
+      <div class="q-text">${item.q}</div>
+      <div class="q-options" id="q-opts">
+        ${item.options.map((o, i) => `
+          <button class="q-opt" data-i="${i}" onclick="selectOpt(${i})">
+            <span class="q-opt-letter">${String.fromCharCode(65 + i)}</span>${o}
+          </button>`).join('')}
+      </div>
+      <div class="q-feedback" id="q-fb"></div>
+      <div class="q-actions">
+        <button class="btn-validate" id="q-validate" disabled onclick="validateOpt()">Valider</button>
+        <button class="btn-next" id="q-next" onclick="nextQuestion()">Suivant →</button>
+      </div>
+    </div>`;
+}
+
+let selected = null;
+function selectOpt(i) {
+  if (answered) return;
+  selected = i;
+  document.querySelectorAll('#q-opts .q-opt').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`#q-opts .q-opt[data-i="${i}"]`).classList.add('selected');
+  document.getElementById('q-validate').disabled = false;
+}
+
+function validateOpt() {
+  if (answered || selected === null) return;
+  answered = true;
+  const item = QUESTIONS[qIndex];
+  const opts = document.querySelectorAll('#q-opts .q-opt');
+  opts.forEach(b => {
+    b.disabled = true;
+    const i = Number(b.dataset.i);
+    if (i === item.correct) b.classList.add('correct');
+    else if (i === selected) b.classList.add('wrong');
+  });
+  const fb = document.getElementById('q-fb');
+  const ok = selected === item.correct;
+  if (ok) qScore++;
+  fb.className = 'q-feedback show ' + (ok ? 'ok' : 'ko');
+  fb.innerHTML = `<div class="fb-title">${ok ? '✓ Correct' : '✗ Incorrect'}</div><div class="fb-expl">${item.expl}</div>`;
+  document.getElementById('q-validate').style.display = 'none';
+  document.getElementById('q-next').style.display = 'inline-block';
+  selected = null;
+}
+
+function nextQuestion() { qIndex++; renderQuestion(); }
+
+function renderScore() {
+  const pct = Math.round((qScore / QUESTIONS.length) * 100);
+  const mount = document.getElementById('quiz-mount');
+  let msg = pct === 100 ? 'Parfait ! 🏆' : pct >= 75 ? 'Très bien ! 🎯' : pct >= 50 ? 'Pas mal, relis le glossaire 📖' : 'À retravailler 💪';
+  mount.innerHTML = `
+    <div class="quiz-score show">
+      <div class="score-big">${qScore}/${QUESTIONS.length}</div>
+      <div class="score-label">${msg} — ${pct}%</div>
+      <button class="btn-retry" onclick="restartQuiz()">↻ Recommencer</button>
+    </div>`;
+}
+
+function restartQuiz() { qIndex = 0; qScore = 0; selected = null; renderQuestion(); }
+
+renderQuestion();
+</script>
+</body>
+</html>
