@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NoSQL · Orienté Colonnes · Cassandra (Docker) — SportShopy</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0a0f1a; --bg2:#0f1729; --bg3:#131e35; --bg4:#1a2640;
+  --border:rgba(34,211,238,.15); --border2:rgba(34,211,238,.30);
+  --primary:#3b82f6; --primary-d:#1d4ed8;
+  --green:#10b981; --green-g:linear-gradient(135deg,#10b981,#059669);
+  --amber:#f59e0b; --danger:#ef4444; --purple:#8b5cf6; --cyan:#06b6d4;
+  --cassandra:#0891b2; --cassandra-l:#22d3ee; --cassandra-g:linear-gradient(135deg,#0891b2,#0e7490);
+  --text:#e2e8f0; --text-muted:#94a3b8; --text-dim:#64748b;
+  --radius:12px; --radius-lg:20px;
+}
+html { scroll-behavior:smooth; }
+body { font-family:'Sora',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; font-size:15px; }
+code,pre,.mono { font-family:'JetBrains Mono',monospace; }
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:var(--bg2); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+
+/* HEADER */
+.site-header { background:linear-gradient(135deg,#0a0f1a,#072a33 50%,#0a0f1a); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; backdrop-filter:blur(12px); }
+.header-inner { max-width:1200px; margin:0 auto; padding:18px 32px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.header-badge { background:var(--cassandra); color:#fff; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:6px; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
+.header-title { font-size:1.15rem; font-weight:700; color:#fff; flex:1; }
+.header-title span { color:var(--cassandra-l); }
+.header-pills { display:flex; gap:8px; flex-wrap:wrap; }
+.pill { font-size:11px; font-weight:500; padding:4px 12px; border-radius:20px; border:1px solid var(--border); color:var(--text-muted); background:rgba(255,255,255,.03); display:flex; align-items:center; gap:5px; }
+.pill.day   { border-color:rgba(59,130,246,.3);  color:var(--primary); }
+.pill.model { border-color:rgba(8,145,178,.35);  color:var(--cassandra-l); }
+.pill.tool  { border-color:rgba(245,158,11,.3);  color:var(--amber); }
+
+/* TABS */
+.tabs-bar { background:var(--bg2); border-bottom:1px solid var(--border); position:sticky; top:73px; z-index:99; }
+.tabs-inner { max-width:1200px; margin:0 auto; padding:0 32px; display:flex; overflow-x:auto; }
+.tab-btn { background:none; border:none; color:var(--text-muted); font-family:'Sora',sans-serif; font-size:13px; font-weight:500; padding:14px 22px; cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; white-space:nowrap; display:flex; align-items:center; gap:7px; }
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active { color:var(--cassandra-l); border-bottom-color:var(--cassandra-l); background:rgba(8,145,178,.05); }
+
+/* LAYOUT */
+.main-wrap { max-width:1200px; margin:0 auto; padding:40px 32px 80px; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+@media(max-width:768px){ .main-wrap{padding:24px 16px 60px;} .header-inner{padding:14px 16px;} .tabs-inner{padding:0 16px;} .section-hero{padding:28px 24px;} }
+
+/* PROGRESS */
+.progress-track { background:var(--bg3); border-radius:4px; height:5px; margin-bottom:40px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--cassandra-g); border-radius:4px; transition:width .6s ease; }
+
+/* HERO */
+.section-hero { background:linear-gradient(135deg,var(--bg3),var(--bg4)); border:1px solid var(--border); border-radius:var(--radius-lg); padding:40px 44px; margin-bottom:32px; position:relative; overflow:hidden; }
+.section-hero::before { content:''; position:absolute; top:-60px; right:-60px; width:220px; height:220px; background:radial-gradient(circle,rgba(8,145,178,.14),transparent 70%); border-radius:50%; }
+.section-hero-icon { font-size:2.5rem; margin-bottom:12px; }
+.section-hero h1 { font-size:2rem; font-weight:800; color:#fff; margin-bottom:8px; line-height:1.2; }
+.section-hero h1 span { color:var(--cassandra-l); }
+.section-hero p { color:var(--text-muted); font-size:.95rem; max-width:680px; }
+.hero-meta { display:flex; gap:24px; margin-top:20px; flex-wrap:wrap; }
+.hero-meta-item { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-muted); }
+.hero-meta-item .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* CARDS */
+.card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:28px 32px; margin-bottom:24px; transition:border-color .2s; }
+.card:hover { border-color:var(--border2); }
+.card-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.card-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.card-icon.cyan   { background:rgba(8,145,178,.15); }
+.card-icon.green  { background:rgba(16,185,129,.15); }
+.card-icon.blue   { background:rgba(59,130,246,.15); }
+.card-icon.amber  { background:rgba(245,158,11,.15); }
+.card-icon.purple { background:rgba(139,92,246,.15); }
+.card-icon.danger { background:rgba(239,68,68,.15); }
+.card-title { font-size:1rem; font-weight:700; color:#fff; }
+.card-subtitle { font-size:.8rem; color:var(--text-muted); margin-top:2px; }
+
+/* GRID */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+@media(max-width:768px){ .grid-2,.grid-3{grid-template-columns:1fr;} }
+
+/* BOXES */
+.box-info    { background:rgba(59,130,246,.07);  border:1px solid rgba(59,130,246,.2);  border-left:4px solid var(--primary); border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-warning { background:rgba(245,158,11,.07);  border:1px solid rgba(245,158,11,.2);  border-left:4px solid var(--amber);   border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-success { background:rgba(16,185,129,.07);  border:1px solid rgba(16,185,129,.2);  border-left:4px solid var(--green);   border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-cass    { background:rgba(8,145,178,.06);   border:1px solid rgba(8,145,178,.2);   border-left:4px solid var(--cassandra); border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-danger  { background:rgba(239,68,68,.07);   border:1px solid rgba(239,68,68,.2);   border-left:4px solid var(--danger);  border-radius:var(--radius); padding:16px 20px; margin:16px 0; font-size:.88rem; color:var(--text-muted); }
+.box-info strong,.box-warning strong,.box-success strong,.box-cass strong,.box-danger strong { color:var(--text); }
+
+/* CODE */
+.code-block { background:#060d1a; border:1px solid rgba(8,145,178,.15); border-radius:var(--radius); overflow:hidden; margin:16px 0; }
+.code-header { background:var(--bg3); border-bottom:1px solid rgba(8,145,178,.12); padding:8px 16px; display:flex; align-items:center; justify-content:space-between; }
+.code-lang { font-size:11px; font-weight:600; color:var(--cassandra-l); font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
+.code-dots { display:flex; gap:6px; }
+.code-dots span { width:10px; height:10px; border-radius:50%; }
+.code-dots span:nth-child(1){background:#ef4444;} .code-dots span:nth-child(2){background:#f59e0b;} .code-dots span:nth-child(3){background:#10b981;}
+.code-body { padding:20px 22px; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:.82rem; line-height:1.8; color:#a8b4c8; }
+.k{color:#569cd6;} .s{color:#ce9178;} .n{color:#b5cea8;} .c{color:#6a9955;} .f{color:#dcdcaa;} .p{color:#9cdcfe;} .r{color:var(--cassandra-l);}
+
+/* SECTION TITLES */
+h2.section-title { font-size:1.3rem; font-weight:800; color:#fff; margin:36px 0 20px; display:flex; align-items:center; gap:10px; }
+h2.section-title .line { flex:1; height:1px; background:var(--border); }
+h3.sub-title { font-size:1rem; font-weight:700; color:var(--text); margin:24px 0 12px; }
+p { color:var(--text-muted); font-size:.9rem; line-height:1.8; margin-bottom:12px; }
+p strong { color:var(--text); }
+
+/* TABLE */
+.compare-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+.compare-table th { background:var(--bg3); color:var(--text-muted); font-weight:600; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; padding:12px 16px; text-align:left; border-bottom:1px solid var(--border); }
+.compare-table td { padding:12px 16px; border-bottom:1px solid var(--border); color:var(--text-muted); vertical-align:top; }
+.compare-table tr:last-child td { border-bottom:none; }
+.compare-table tr:hover td { background:rgba(255,255,255,.02); }
+.compare-table td:first-child { color:var(--text); font-weight:600; }
+.badge-yes { color:var(--green); font-weight:700; }
+.badge-no  { color:var(--danger); font-weight:700; }
+.badge-partial { color:var(--amber); font-weight:700; }
+
+/* TP HEADER */
+.tp-header { background:linear-gradient(135deg,#072a33,#06222a); border:1px solid rgba(8,145,178,.25); border-radius:var(--radius-lg); padding:36px 44px; margin-bottom:32px; position:relative; overflow:hidden; }
+.tp-header::after { content:'PHASE 3'; position:absolute; right:32px; bottom:20px; font-family:'JetBrains Mono',monospace; font-size:4rem; font-weight:700; color:rgba(8,145,178,.08); line-height:1; }
+.tp-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(8,145,178,.12); border:1px solid rgba(8,145,178,.25); border-radius:8px; padding:6px 14px; font-size:.75rem; font-weight:700; color:var(--cassandra-l); font-family:'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; margin-bottom:16px; }
+.tp-title { font-size:1.7rem; font-weight:800; color:#fff; margin-bottom:8px; }
+.tp-title span { color:var(--cassandra-l); }
+.tp-desc { color:var(--text-muted); font-size:.92rem; max-width:620px; }
+.git-branch { display:inline-flex; align-items:center; gap:6px; background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:4px 12px; font-family:'JetBrains Mono',monospace; font-size:.8rem; color:var(--purple); margin-top:12px; }
+
+/* CHECKLIST */
+.checklist { list-style:none; display:flex; flex-direction:column; gap:10px; }
+.checklist li { display:flex; align-items:flex-start; gap:10px; color:var(--text-muted); font-size:.88rem; }
+.checklist li::before { content:'✓'; color:var(--green); font-weight:700; flex-shrink:0; margin-top:1px; }
+.checklist li.warn::before { content:'⚠'; color:var(--amber); }
+
+/* RESULT PANEL */
+.result-panel { background:#030810; border:1px solid rgba(8,145,178,.2); border-radius:var(--radius); padding:20px 24px; margin:16px 0; font-family:'JetBrains Mono',monospace; font-size:.82rem; color:var(--cassandra-l); line-height:1.9; }
+.result-panel .ok  { color:var(--green); }
+.result-panel .key { color:#9cdcfe; }
+.result-panel .val { color:#ce9178; }
+.result-panel .num { color:#b5cea8; }
+
+/* GLOSSAIRE */
+.glossary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media(max-width:900px){ .glossary-grid{grid-template-columns:1fr 1fr;} }
+@media(max-width:560px){ .glossary-grid{grid-template-columns:1fr;} }
+.gl-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; transition:border-color .2s,transform .15s; }
+.gl-card:hover { border-color:rgba(8,145,178,.4); transform:translateY(-2px); }
+.gl-term { font-family:'JetBrains Mono',monospace; font-size:.85rem; font-weight:700; color:var(--cassandra-l); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.gl-num { font-size:.68rem; background:rgba(8,145,178,.12); border:1px solid rgba(8,145,178,.2); border-radius:4px; padding:2px 6px; color:rgba(34,211,238,.7); flex-shrink:0; }
+.gl-def { font-size:.83rem; color:var(--text-muted); line-height:1.6; }
+.gl-def strong { color:var(--text); }
+.gl-tag { display:inline-block; margin-top:10px; font-size:.68rem; padding:2px 8px; border-radius:10px; font-family:'JetBrains Mono',monospace; }
+.gl-tag.concept  { background:rgba(59,130,246,.12);  color:#93c5fd; border:1px solid rgba(59,130,246,.2); }
+.gl-tag.cql      { background:rgba(8,145,178,.10);   color:#67e8f9; border:1px solid rgba(8,145,178,.2); }
+.gl-tag.archi    { background:rgba(139,92,246,.12);  color:#c4b5fd; border:1px solid rgba(139,92,246,.2); }
+.gl-tag.modele   { background:rgba(245,158,11,.12);  color:#fcd34d; border:1px solid rgba(245,158,11,.2); }
+
+/* QUIZ */
+.q-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:30px 34px; }
+.q-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; gap:16px; }
+.q-counter { font-family:'JetBrains Mono',monospace; font-size:.75rem; font-weight:700; color:var(--text-dim); letter-spacing:.08em; white-space:nowrap; }
+.q-mini-bar { flex:1; height:4px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+.q-mini-fill { height:100%; background:var(--cassandra-g); border-radius:4px; transition:width .4s ease; }
+.q-text { font-size:1rem; font-weight:600; color:var(--text); margin-bottom:22px; line-height:1.55; }
+.q-options { display:flex; flex-direction:column; gap:10px; }
+.q-opt { background:var(--bg3); border:2px solid var(--border); border-radius:10px; padding:13px 20px; font-size:.88rem; color:var(--text-muted); cursor:pointer; text-align:left; font-family:'Sora',sans-serif; transition:background .15s,border-color .15s,color .15s; width:100%; display:flex; align-items:center; gap:12px; }
+.q-opt-letter { width:26px; height:26px; border-radius:6px; background:rgba(255,255,255,.06); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:.72rem; font-weight:700; color:var(--text-dim); flex-shrink:0; transition:background .15s,border-color .15s,color .15s; }
+.q-opt:hover:not(:disabled) { background:rgba(8,145,178,.06); border-color:rgba(8,145,178,.3); color:var(--text); }
+.q-opt:hover:not(:disabled) .q-opt-letter { background:rgba(8,145,178,.15); border-color:rgba(8,145,178,.3); color:var(--cassandra-l); }
+.q-opt.selected { background:rgba(59,130,246,.08); border-color:var(--primary); color:var(--text); }
+.q-opt.selected .q-opt-letter { background:var(--primary); border-color:var(--primary); color:#fff; }
+.q-opt.correct { background:rgba(16,185,129,.10); border-color:var(--green); color:var(--green); font-weight:600; }
+.q-opt.correct .q-opt-letter { background:var(--green); border-color:var(--green); color:#fff; }
+.q-opt.wrong { background:rgba(239,68,68,.08); border-color:var(--danger); color:var(--danger); }
+.q-opt.wrong .q-opt-letter { background:var(--danger); border-color:var(--danger); color:#fff; }
+.q-opt:disabled { cursor:default; }
+.q-actions { display:flex; align-items:center; gap:12px; margin-top:20px; }
+.btn-validate { background:var(--cassandra-g); border:none; color:#fff; font-family:'Sora',sans-serif; font-size:.88rem; font-weight:700; padding:11px 28px; border-radius:9px; cursor:pointer; transition:opacity .15s; }
+.btn-validate:hover:not(:disabled) { opacity:.9; }
+.btn-validate:disabled { opacity:.35; cursor:not-allowed; }
+.btn-next { background:rgba(8,145,178,.12); border:1px solid rgba(8,145,178,.3); color:var(--cassandra-l); font-family:'Sora',sans-serif; font-size:.88rem; font-weight:600; padding:11px 24px; border-radius:9px; cursor:pointer; transition:background .15s; display:none; }
+.btn-next:hover { background:rgba(8,145,178,.22); }
+.q-feedback { margin-top:16px; border-radius:10px; padding:14px 18px; font-size:.86rem; line-height:1.6; display:none; }
+.q-feedback.show { display:block; }
+.q-feedback.ok { background:rgba(16,185,129,.07); border:1px solid rgba(16,185,129,.2); border-left:4px solid var(--green); }
+.q-feedback.ok .fb-title { color:var(--green); font-weight:700; margin-bottom:4px; }
+.q-feedback.ko { background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.2); border-left:4px solid var(--danger); }
+.q-feedback.ko .fb-title { color:var(--danger); font-weight:700; margin-bottom:4px; }
+.fb-expl { color:var(--text-muted); }
+
+/* SCORE */
+.quiz-score { background:linear-gradient(135deg,var(--bg3),var(--bg4)); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px; text-align:center; margin-top:8px; display:none; }
+.quiz-score.show { display:block; }
+.score-big { font-size:3.5rem; font-weight:800; color:var(--cassandra-l); line-height:1; margin-bottom:8px; }
+.score-label { font-size:1rem; color:var(--text-muted); margin-bottom:20px; }
+.btn-retry { background:rgba(8,145,178,.12); border:1px solid rgba(8,145,178,.3); color:var(--cassandra-l); font-family:'Sora',sans-serif; font-size:.88rem; font-weight:600; padding:10px 28px; border-radius:8px; cursor:pointer; transition:background .15s; }
+.btn-retry:hover { background:rgba(8,145,178,.22); }
+
+/* OBJ GRID */
+.obj-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media(max-width:768px){ .obj-grid{grid-template-columns:1fr 1fr;} }
+.obj-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; display:flex; flex-direction:column; gap:8px; }
+.obj-icon { font-size:1.5rem; }
+.obj-text { font-size:.83rem; color:var(--text-muted); line-height:1.5; }
+.obj-text strong { color:var(--text); display:block; margin-bottom:3px; }
+
+/* VARIANT SWITCH */
+.variant-switch { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 4px; }
+.variant-link { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:10px; font-size:.85rem; font-weight:600; text-decoration:none; border:1px solid var(--border); transition:all .15s; }
+.variant-link.active { background:var(--cassandra-g); color:#fff; border-color:transparent; }
+.variant-link.alt { background:var(--bg3); color:var(--text-muted); }
+.variant-link.alt:hover { border-color:var(--border2); color:var(--text); }
+
+@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.tab-content.active { animation:fadeIn .35s ease; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <span class="header-badge">Cassandra</span>
+    <h1 class="header-title">NoSQL · <span>Orienté Colonnes</span> — Phase 3</h1>
+    <div class="header-pills">
+      <span class="pill day">📅 Jour 3</span>
+      <span class="pill model">🟦 Wide-Column</span>
+      <span class="pill tool">🐳 Cassandra + Docker</span>
+      <span class="pill">🎓 BAC+3</span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs-bar">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="switchTab('theorie')">📘 Théorie</button>
+    <button class="tab-btn" onclick="switchTab('prise-en-main')">🐳 Prise en main</button>
+    <button class="tab-btn" onclick="switchTab('tp')">📊 TP · SportShopy</button>
+    <button class="tab-btn" onclick="switchTab('solutions')">✅ Solutions</button>
+    <button class="tab-btn" onclick="switchTab('recap')">📋 Récap</button>
+    <button class="tab-btn" onclick="switchTab('glossaire')">📖 Glossaire</button>
+    <button class="tab-btn" onclick="switchTab('quiz')">🎯 Questionnaire</button>
+  </div>
+</nav>
+
+<main class="main-wrap">
+
+<!-- ══════════════════════════════════ THÉORIE ══════════════════════ -->
+<div id="tab-theorie" class="tab-content active">
+  <div class="progress-track"><div class="progress-fill" style="width:14%"></div></div>
+
+  <div class="variant-switch">
+    <span class="variant-link active">🐳 Version Docker</span>
+    <a class="variant-link alt" href="classique.html">💻 Version installation classique →</a>
+  </div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">🟦</div>
+    <h1>Le modèle <span>Orienté Colonnes</span></h1>
+    <p>Cassandra est une base <strong>distribuée, sans maître</strong> conçue pour absorber d'énormes volumes d'écritures sur des centaines de nœuds. Son modèle « wide-column » et son langage CQL ressemblent à du SQL, mais la logique est inversée : on modélise <strong>autour des requêtes</strong>, pas autour des données. Cas d'usage roi : les <strong>séries temporelles</strong> et l'analytics.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><span class="dot" style="background:var(--cassandra-l)"></span>Distribué / masterless</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--amber)"></span>Write-optimized</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--green)"></span>CQL ≈ SQL</div>
+      <div class="hero-meta-item"><span class="dot" style="background:var(--purple)"></span>cassandra-driver</div>
+    </div>
+  </div>
+
+  <h2 class="section-title">🎯 Objectifs de la phase <span class="line"></span></h2>
+  <div class="obj-grid">
+    <div class="obj-card"><div class="obj-icon">🟦</div><div class="obj-text"><strong>Comprendre le wide-column</strong>Keyspace, table, partition key, clustering columns</div></div>
+    <div class="obj-card"><div class="obj-icon">🐳</div><div class="obj-text"><strong>Lancer Cassandra avec Docker</strong>docker compose, healthcheck, cqlsh</div></div>
+    <div class="obj-card"><div class="obj-icon">⌨️</div><div class="obj-text"><strong>Écrire du CQL</strong>CREATE KEYSPACE/TABLE, INSERT, SELECT, COUNTER</div></div>
+    <div class="obj-card"><div class="obj-icon">🧭</div><div class="obj-text"><strong>Modéliser par la requête</strong>Dénormalisation, une table = une requête</div></div>
+    <div class="obj-card"><div class="obj-icon">📊</div><div class="obj-text"><strong>Tracker l'analytics</strong>analyticsService : vues produit, séries temporelles</div></div>
+    <div class="obj-card"><div class="obj-icon">⚛️</div><div class="obj-text"><strong>Construire le dashboard</strong>AnalyticsPage : top produits, courbe de vues</div></div>
+  </div>
+
+  <h2 class="section-title">⚡ Pourquoi Cassandra pour l'analytics ? <span class="line"></span></h2>
+  <div class="card">
+    <p>L'analytics (vues produit, clics, événements) a un profil radicalement différent du catalogue ou du panier :</p>
+    <table class="compare-table" style="margin-top:16px">
+      <thead><tr><th>Critère</th><th>MongoDB (catalogue)</th><th>Cassandra (analytics)</th></tr></thead>
+      <tbody>
+        <tr><td>Profil de charge</td><td>Lecture dominante</td><td><span class="badge-yes">Écriture massive</span></td></tr>
+        <tr><td>Volume</td><td>20 produits (stable)</td><td>Millions d'événements / jour</td></tr>
+        <tr><td>Forme des données</td><td>Documents riches</td><td>Séries temporelles append-only</td></tr>
+        <tr><td>Scalabilité</td><td>Verticale / replica set</td><td><span class="badge-yes">Horizontale linéaire</span></td></tr>
+        <tr><td>Requêtes</td><td>Flexibles, ad-hoc</td><td>Connues à l'avance</td></tr>
+        <tr><td>Disponibilité</td><td>Master + replicas</td><td>Masterless (pas de SPOF)</td></tr>
+      </tbody>
+    </table>
+    <div class="box-cass"><strong>Règle empirique :</strong> Cassandra quand on écrit <strong>énormément</strong>, que les données sont des <strong>séries temporelles</strong> append-only, et qu'on connaît ses requêtes à l'avance. À éviter pour des requêtes ad-hoc ou des jointures.</div>
+  </div>
+
+  <h2 class="section-title">🏛️ Architecture : l'anneau sans maître <span class="line"></span></h2>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><div class="card-icon purple">💍</div><div><div class="card-title">Ring & peer-to-peer</div><div class="card-subtitle">Pas de nœud maître</div></div></div>
+      <p>Tous les nœuds sont égaux et organisés en anneau. N'importe lequel peut recevoir une requête (le <em>coordinator</em>) et la router. Aucun point unique de panne : si un nœud tombe, les autres continuent.</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-icon amber">🔀</div><div><div class="card-title">Partitionnement par hash</div><div class="card-subtitle">La partition key décide du nœud</div></div></div>
+      <p>Cassandra hache la <strong>partition key</strong> pour déterminer quel nœud stocke la donnée. Bien choisir cette clé = répartir uniformément la charge et éviter les <em>hot partitions</em>.</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-icon green">📑</div><div><div class="card-title">Réplication</div><div class="card-subtitle">replication_factor</div></div></div>
+      <p>Chaque donnée est copiée sur N nœuds (RF=3 typiquement en prod). En TP local on utilise RF=1 (un seul nœud). C'est ce qui donne la tolérance aux pannes.</p>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-icon blue">⚖️</div><div><div class="card-title">Niveaux de cohérence</div><div class="card-subtitle">ONE · QUORUM · ALL</div></div></div>
+      <p>Cassandra est « AP » (théorème CAP) et propose une cohérence <em>tunable</em> par requête : <code>ONE</code> (rapide), <code>QUORUM</code> (équilibré), <code>ALL</code> (sûr mais lent).</p>
+    </div>
+  </div>
+
+  <h2 class="section-title">🗂️ La hiérarchie du modèle de données <span class="line"></span></h2>
+  <div class="card">
+    <table class="compare-table">
+      <thead><tr><th>Cassandra</th><th>Équivalent SQL</th><th>Rôle</th></tr></thead>
+      <tbody>
+        <tr><td>Keyspace</td><td>Database</td><td>Conteneur de tables + stratégie de réplication</td></tr>
+        <tr><td>Table</td><td>Table</td><td>Ensemble de lignes partageant un schéma</td></tr>
+        <tr><td>Partition key</td><td>(pas d'équivalent direct)</td><td>Détermine le nœud de stockage — regroupe les lignes</td></tr>
+        <tr><td>Clustering column</td><td>ORDER BY implicite</td><td>Trie les lignes <em>à l'intérieur</em> d'une partition</td></tr>
+        <tr><td>Row</td><td>Row</td><td>Une ligne identifiée par sa PRIMARY KEY complète</td></tr>
+      </tbody>
+    </table>
+    <div class="box-cass"><strong>PRIMARY KEY = (partition key, clustering columns).</strong> La 1<sup>re</sup> partie (entre parenthèses si composite) place la donnée ; les suivantes la trient. C'est <em>la</em> notion à maîtriser.</div>
+  </div>
+
+  <h2 class="section-title">📈 Modéliser une série temporelle <span class="line"></span></h2>
+  <div class="card">
+    <p>Le pattern « wide row » : une partition par produit, et chaque vue est une ligne triée par horodatage décroissant. Lire les dernières vues d'un produit = lire une seule partition, séquentiellement. Ultra-rapide.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cql · table série temporelle</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">CREATE TABLE</span> product_views (<br>
+&nbsp;&nbsp;<span class="p">product_id</span> <span class="k">text</span>,<br>
+&nbsp;&nbsp;<span class="p">view_time</span> <span class="k">timestamp</span>,<br>
+&nbsp;&nbsp;<span class="p">session_id</span> <span class="k">text</span>,<br>
+&nbsp;&nbsp;<span class="k">PRIMARY KEY</span> ((<span class="r">product_id</span>), <span class="r">view_time</span>)<br>
+) <span class="k">WITH CLUSTERING ORDER BY</span> (<span class="p">view_time</span> <span class="k">DESC</span>);
+      </div>
+    </div>
+    <p><code>product_id</code> = partition key (toutes les vues d'un produit ensemble). <code>view_time</code> = clustering column triée DESC (les plus récentes d'abord).</p>
+  </div>
+
+  <h2 class="section-title">🧭 Le renversement mental : « query-first » <span class="line"></span></h2>
+  <div class="card">
+    <p>En SQL on normalise, puis on écrit les requêtes. En Cassandra c'est l'inverse : on <strong>liste d'abord les requêtes</strong>, puis on crée une table par requête, quitte à dupliquer les données.</p>
+    <div class="grid-2">
+      <div class="box-danger"><strong>❌ Réflexe SQL</strong><br>Une table normalisée + jointures + WHERE arbitraire. → Impossible : pas de JOIN, WHERE limité à la clé primaire.</div>
+      <div class="box-success"><strong>✅ Réflexe Cassandra</strong><br>« Je veux le top produits du jour » → table <code>views_by_day</code> dédiée. « Les vues récentes d'un produit » → table <code>product_views</code> dédiée.</div>
+    </div>
+    <div class="box-warning"><strong>La dénormalisation est normale ici.</strong> Le disque est bon marché, les écritures sont rapides : dupliquer la donnée dans plusieurs tables est la bonne pratique, pas un anti-pattern.</div>
+  </div>
+</div><!-- /tab-theorie -->
+
+<!-- ════════════════════════════ PRISE EN MAIN (DOCKER) ═══════════════════════ -->
+<div id="tab-prise-en-main" class="tab-content">
+  <div class="progress-track"><div class="progress-fill" style="width:28%"></div></div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">🐳</div>
+    <h1>Cassandra avec <span>Docker</span></h1>
+    <p>Lancer un nœud Cassandra conteneurisé, attendre qu'il soit prêt (il est lent à démarrer !), puis explorer avec <code>cqlsh</code>.</p>
+  </div>
+
+  <h2 class="section-title">🐳 Activer le service dans docker-compose <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon cyan">📄</div><div><div class="card-title">docker-compose.yml</div><div class="card-subtitle">Décommenter le bloc Phase 3</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">yaml · docker-compose.yml</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+&nbsp;&nbsp;<span class="c"># ── Phase 3 · Cassandra ─────────────────────────</span><br>
+&nbsp;&nbsp;<span class="p">cassandra</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">image</span>: cassandra:<span class="n">4.1</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">container_name</span>: sportshopy-cassandra<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">ports</span>: [<span class="s">'9042:9042'</span>]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">volumes</span>: [<span class="s">'cassandra_data:/var/lib/cassandra'</span>]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">environment</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- CASSANDRA_CLUSTER_NAME=SportShopyCluster<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">healthcheck</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">test</span>: [<span class="s">"CMD-SHELL"</span>, <span class="s">"cqlsh -e 'describe keyspaces'"</span>]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">interval</span>: <span class="n">15s</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">timeout</span>: <span class="n">10s</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">retries</span>: <span class="n">10</span><br><br>
+<span class="p">volumes</span>:<br>
+&nbsp;&nbsp;<span class="p">cassandra_data</span>:
+      </div>
+    </div>
+    <div class="box-warning"><strong>Le healthcheck n'est pas optionnel ici.</strong> Cassandra met <strong>60 à 90 secondes</strong> à démarrer. Sans healthcheck, le serveur Node tenterait de se connecter avant que la base soit prête et planterait.</div>
+  </div>
+
+  <h2 class="section-title">▶️ Démarrer et surveiller <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash · racine du projet</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c"># Démarrer Cassandra en arrière-plan</span><br>
+docker compose up cassandra -d<br><br>
+<span class="c"># Suivre le démarrage (patiente ~1 à 2 min)</span><br>
+docker compose logs -f cassandra<br><br>
+<span class="c"># Vérifier que le healthcheck est passé "healthy"</span><br>
+docker compose ps
+      </div>
+    </div>
+    <div class="result-panel">
+<span class="ok">✓ NAME</span>                    <span class="key">STATUS</span><br>
+sportshopy-cassandra    <span class="val">Up 2 minutes (healthy)</span>
+    </div>
+    <div class="box-info"><strong>Astuce :</strong> tant que la colonne STATUS affiche <code>(health: starting)</code>, attends. Ne lance le serveur Node qu'une fois <code>(healthy)</code>.</div>
+  </div>
+
+  <h2 class="section-title">⌨️ cqlsh — le shell CQL <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon cyan">💻</div><div><div class="card-title">Entrer dans cqlsh</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+docker exec -it sportshopy-cassandra cqlsh
+      </div>
+    </div>
+    <h3 class="sub-title">Créer le keyspace et explorer</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cqlsh</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">-- Créer le keyspace (RF=1 : un seul nœud en TP)</span><br>
+<span class="k">CREATE KEYSPACE IF NOT EXISTS</span> sportshopy<br>
+&nbsp;&nbsp;<span class="k">WITH</span> replication = {<span class="s">'class'</span>: <span class="s">'SimpleStrategy'</span>, <span class="s">'replication_factor'</span>: <span class="n">1</span>};<br><br>
+<span class="c">-- Lister les keyspaces</span><br>
+<span class="k">DESCRIBE KEYSPACES</span>;<br><br>
+<span class="c">-- Se positionner dessus</span><br>
+<span class="k">USE</span> sportshopy;<br><br>
+<span class="c">-- Voir les tables</span><br>
+<span class="k">DESCRIBE TABLES</span>;
+      </div>
+    </div>
+    <h3 class="sub-title">CQL fondamental</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cqlsh · sportshopy</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">-- INSERT (un INSERT = un UPSERT en Cassandra)</span><br>
+<span class="k">INSERT INTO</span> product_views (product_id, view_time, session_id)<br>
+&nbsp;&nbsp;<span class="k">VALUES</span> (<span class="s">'p-run-001'</span>, toTimestamp(now()), <span class="s">'sess-42'</span>);<br><br>
+<span class="c">-- SELECT : WHERE doit cibler la partition key</span><br>
+<span class="k">SELECT</span> * <span class="k">FROM</span> product_views <span class="k">WHERE</span> product_id = <span class="s">'p-run-001'</span>;<br><br>
+<span class="c">-- Limiter aux 10 dernières (déjà triées DESC)</span><br>
+<span class="k">SELECT</span> view_time, session_id <span class="k">FROM</span> product_views<br>
+&nbsp;&nbsp;<span class="k">WHERE</span> product_id = <span class="s">'p-run-001'</span> <span class="k">LIMIT</span> <span class="n">10</span>;
+      </div>
+    </div>
+    <div class="box-danger"><strong>Piège SQL :</strong> <code>SELECT * FROM product_views WHERE session_id = '...'</code> échoue. On ne peut filtrer que sur la partition key (et les clustering columns dans l'ordre). Pour filtrer par session, il faudrait une <em>autre table</em> dédiée.</div>
+  </div>
+
+  <h2 class="section-title">🔢 Les counters pour les agrégats <span class="line"></span></h2>
+  <div class="card">
+    <p>Pour compter les vues par jour, Cassandra propose le type spécial <code>counter</code> : un <code>UPDATE ... SET x = x + 1</code> atomique et distribué.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">cqlsh</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">CREATE TABLE</span> views_by_day (<br>
+&nbsp;&nbsp;<span class="p">product_id</span> <span class="k">text</span>,<br>
+&nbsp;&nbsp;<span class="p">day</span> <span class="k">date</span>,<br>
+&nbsp;&nbsp;<span class="p">views</span> <span class="k">counter</span>,<br>
+&nbsp;&nbsp;<span class="k">PRIMARY KEY</span> ((<span class="r">product_id</span>), <span class="r">day</span>)<br>
+);<br><br>
+<span class="c">-- Incrémenter le compteur du jour</span><br>
+<span class="k">UPDATE</span> views_by_day <span class="k">SET</span> views = views + <span class="n">1</span><br>
+&nbsp;&nbsp;<span class="k">WHERE</span> product_id = <span class="s">'p-run-001'</span> <span class="k">AND</span> day = <span class="s">'2026-06-21'</span>;
+      </div>
+    </div>
+    <div class="box-cass"><strong>Une table counter ne contient que des counters</strong> (en plus de la clé). Impossible de mélanger une colonne <code>counter</code> et une colonne <code>text</code> hors clé.</div>
+  </div>
+</div><!-- /tab-prise-en-main -->
+
+<!-- ════════════════════════════ TP SPORTSHOPY ═══════════════════════ -->
+<div id="tab-tp" class="tab-content">
+  <div class="progress-track"><div class="progress-fill" style="width:57%"></div></div>
+
+  <div class="tp-header">
+    <div class="tp-badge">📊 TP Phase 3</div>
+    <div class="tp-title">SportShopy × <span>Cassandra</span></div>
+    <div class="tp-desc">MongoDB sert le catalogue, Redis le panier. Tu vas maintenant <strong>tracker chaque vue produit</strong> dans Cassandra et construire la page Analytics : top produits et courbe de vues sur 7 jours.</div>
+    <div class="git-branch">⎇ feature/cassandra</div>
+  </div>
+
+  <h2 class="section-title">Étape 1 — Démarrer Cassandra (Docker) <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon cyan">🐳</div><div><div class="card-title">Docker Compose + schéma</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash · racine du projet</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+docker compose up cassandra -d<br><br>
+<span class="c"># Attendre le statut (healthy)</span><br>
+docker compose ps<br><br>
+<span class="c"># Vérifier la connexion</span><br>
+docker exec -it sportshopy-cassandra cqlsh -e <span class="s">"DESCRIBE KEYSPACES"</span>
+      </div>
+    </div>
+    <p>Ajoute dans <code>server/.env</code> :</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">env · server/.env</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+CASSANDRA_HOST=127.0.0.1<br>
+CASSANDRA_DC=datacenter1<br>
+CASSANDRA_KEYSPACE=sportshopy
+      </div>
+    </div>
+    <div class="box-info"><strong>datacenter1</strong> est le nom du datacenter par défaut d'un nœud Cassandra. Le driver Node l'exige (<code>localDataCenter</code>).</div>
+  </div>
+
+  <h2 class="section-title">Étape 2 — Driver & connexion <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon cyan">🔌</div><div><div class="card-title">server/config/cassandra.js</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash · installer le driver</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+cd server && npm install cassandra-driver
+      </div>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/config/cassandra.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> cassandra = <span class="f">require</span>(<span class="s">'cassandra-driver'</span>)<br><br>
+<span class="k">const</span> client = <span class="k">new</span> cassandra.<span class="f">Client</span>({<br>
+&nbsp;&nbsp;<span class="p">contactPoints</span>: [process.env.<span class="p">CASSANDRA_HOST</span> || <span class="s">'127.0.0.1'</span>],<br>
+&nbsp;&nbsp;<span class="p">localDataCenter</span>: process.env.<span class="p">CASSANDRA_DC</span> || <span class="s">'datacenter1'</span>,<br>
+&nbsp;&nbsp;<span class="p">keyspace</span>: process.env.<span class="p">CASSANDRA_KEYSPACE</span> || <span class="s">'sportshopy'</span>,<br>
+})<br><br>
+module.exports = client
+      </div>
+    </div>
+    <p>Crée un script d'init du schéma exécuté au démarrage :</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/scripts/initCassandra.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> cassandra = <span class="f">require</span>(<span class="s">'cassandra-driver'</span>)<br><br>
+<span class="k">async function</span> <span class="f">initSchema</span>() {<br>
+&nbsp;&nbsp;<span class="c">// Connexion SANS keyspace pour pouvoir le créer</span><br>
+&nbsp;&nbsp;<span class="k">const</span> sys = <span class="k">new</span> cassandra.<span class="f">Client</span>({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">contactPoints</span>: [process.env.<span class="p">CASSANDRA_HOST</span> || <span class="s">'127.0.0.1'</span>],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">localDataCenter</span>: process.env.<span class="p">CASSANDRA_DC</span> || <span class="s">'datacenter1'</span>,<br>
+&nbsp;&nbsp;})<br>
+&nbsp;&nbsp;<span class="k">await</span> sys.<span class="f">execute</span>(`<span class="k">CREATE KEYSPACE IF NOT EXISTS</span> sportshopy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">WITH</span> replication = {<span class="s">'class'</span>:<span class="s">'SimpleStrategy'</span>,<span class="s">'replication_factor'</span>:<span class="n">1</span>}`)<br>
+&nbsp;&nbsp;<span class="k">await</span> sys.<span class="f">execute</span>(<span class="s">'USE sportshopy'</span>)<br>
+&nbsp;&nbsp;<span class="k">await</span> sys.<span class="f">execute</span>(`<span class="k">CREATE TABLE IF NOT EXISTS</span> product_views (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;product_id text, view_time timestamp, session_id text,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">PRIMARY KEY</span> ((product_id), view_time))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">WITH CLUSTERING ORDER BY</span> (view_time <span class="k">DESC</span>)`)<br>
+&nbsp;&nbsp;<span class="k">await</span> sys.<span class="f">execute</span>(`<span class="k">CREATE TABLE IF NOT EXISTS</span> views_by_day (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;product_id text, day date, views counter,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">PRIMARY KEY</span> ((product_id), day))`)<br>
+&nbsp;&nbsp;<span class="k">await</span> sys.<span class="f">shutdown</span>()<br>
+}<br>
+module.exports = initSchema
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Étape 3 — analyticsService <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon amber">📊</div><div><div class="card-title">server/services/analyticsService.js</div><div class="card-subtitle">Enregistrer + agréger les vues</div></div></div>
+    <p>Fonctions à implémenter :</p>
+    <ul class="checklist" style="margin-top:8px">
+      <li><code>recordView(productId, sessionId)</code> — insère dans <code>product_views</code> + incrémente <code>views_by_day</code></li>
+      <li><code>getRecentViews(productId, limit)</code> — les dernières vues d'un produit</li>
+      <li><code>getViewsByDay(productId)</code> — la série temporelle d'un produit (courbe 7 jours)</li>
+      <li><code>getTopProducts()</code> — agrégat des vues du jour, trié décroissant</li>
+    </ul>
+    <div class="box-cass"><strong>Toujours <code>{ prepare: true }</code></strong> sur les <code>execute()</code> paramétrés : Cassandra met la requête en cache côté serveur et binde les types correctement.</div>
+  </div>
+
+  <h2 class="section-title">Étape 4 — Routes API <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon blue">🛣️</div><div><div class="card-title">server/routes/analytics.js</div></div></div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash · tester avec curl</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c"># Enregistrer une vue (appelé depuis ProductPage au chargement)</span><br>
+curl -X POST http://localhost:3001/api/analytics/view \<br>
+&nbsp;&nbsp;-H <span class="s">"Content-Type: application/json"</span> \<br>
+&nbsp;&nbsp;-d <span class="s">'{"productId":"p-run-001","sessionId":"sess-42"}'</span><br><br>
+<span class="c"># Top produits du jour</span><br>
+curl http://localhost:3001/api/analytics/top<br><br>
+<span class="c"># Série temporelle d'un produit</span><br>
+curl http://localhost:3001/api/analytics/product/p-run-001/timeline
+      </div>
+    </div>
+    <div class="result-panel">
+<span class="ok">✓ GET /api/analytics/top :</span><br>
+{ "<span class="key">success</span>": <span class="num">true</span>, "<span class="key">data</span>": [<br>
+&nbsp;&nbsp;{ "<span class="key">productId</span>": <span class="val">"p-run-001"</span>, "<span class="key">views</span>": <span class="num">128</span> },<br>
+&nbsp;&nbsp;{ "<span class="key">productId</span>": <span class="val">"p-yoga-003"</span>, "<span class="key">views</span>": <span class="num">94</span> } ] }
+    </div>
+    <p>Enregistre la route dans <code>server/app.js</code> :</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/app.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+app.<span class="f">use</span>(<span class="s">'/api/analytics'</span>, <span class="f">require</span>(<span class="s">'./routes/analytics'</span>))
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Étape 5 — Côté client <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon purple">⚛️</div><div><div class="card-title">Tracking + AnalyticsPage</div></div></div>
+    <h3 class="sub-title">Tracker la vue à l'ouverture d'un produit</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">jsx · ProductPage.jsx (extrait)</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="f">useEffect</span>(() => {<br>
+&nbsp;&nbsp;<span class="c">// fire-and-forget : on ne bloque pas l'affichage</span><br>
+&nbsp;&nbsp;analyticsService.<span class="f">recordView</span>(productId, <span class="f">getSessionId</span>())<br>
+}, [productId])
+      </div>
+    </div>
+    <h3 class="sub-title">AnalyticsPage : remplacer le placeholder</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">jsx · structure</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// Top produits (barres) + courbe de vues 7 jours</span><br>
+<span class="k">const</span> { data: top } = <span class="f">useFetch</span>(<span class="s">'/api/analytics/top'</span>)<br>
+<span class="k">const</span> { data: timeline } = <span class="f">useFetch</span>(<br>
+&nbsp;&nbsp;`/api/analytics/product/${selected}/timeline`)<br><br>
+<span class="c">// → barres horizontales pour le top</span><br>
+<span class="c">// → sparkline / SVG simple pour la série temporelle</span>
+      </div>
+    </div>
+    <div class="box-success">Le placeholder <code>« Le dashboard sera disponible après Cassandra (Phase 3) »</code> est maintenant remplacé par un vrai tableau de bord alimenté par les compteurs Cassandra.</div>
+  </div>
+</div><!-- /tab-tp -->
+
+<!-- ══════════════════════════════ SOLUTIONS ═════════════════════════ -->
+<div id="tab-solutions" class="tab-content">
+  <div class="progress-track"><div class="progress-fill" style="width:71%"></div></div>
+
+  <div class="section-hero" style="border-color:rgba(8,145,178,.2);background:linear-gradient(135deg,#06222a,#072a33)">
+    <div class="section-hero-icon">✅</div>
+    <h1>Solution <span>analyticsService</span></h1>
+    <p>Code final validé. Essaie d'abord — ne regarde ici qu'en cas de blocage.</p>
+  </div>
+
+  <h2 class="section-title">server/services/analyticsService.js <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · solution complète</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> client = <span class="f">require</span>(<span class="s">'../config/cassandra'</span>)<br><br>
+<span class="k">function</span> <span class="f">todayDate</span>() {<br>
+&nbsp;&nbsp;<span class="k">return</span> <span class="k">new</span> <span class="f">Date</span>().<span class="f">toISOString</span>().<span class="f">slice</span>(<span class="n">0</span>, <span class="n">10</span>)  <span class="c">// 'YYYY-MM-DD'</span><br>
+}<br><br>
+<span class="k">async function</span> <span class="f">recordView</span>(productId, sessionId) {<br>
+&nbsp;&nbsp;<span class="k">await</span> client.<span class="f">execute</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">'INSERT INTO product_views (product_id, view_time, session_id) VALUES (?, ?, ?)'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[productId, <span class="k">new</span> <span class="f">Date</span>(), sessionId],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="p">prepare</span>: <span class="k">true</span> }<br>
+&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;<span class="k">await</span> client.<span class="f">execute</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">'UPDATE views_by_day SET views = views + 1 WHERE product_id = ? AND day = ?'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[productId, <span class="f">todayDate</span>()],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="p">prepare</span>: <span class="k">true</span> }<br>
+&nbsp;&nbsp;)<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">getRecentViews</span>(productId, limit = <span class="n">10</span>) {<br>
+&nbsp;&nbsp;<span class="k">const</span> rs = <span class="k">await</span> client.<span class="f">execute</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">'SELECT view_time, session_id FROM product_views WHERE product_id = ? LIMIT ?'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[productId, limit], { <span class="p">prepare</span>: <span class="k">true</span> }<br>
+&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;<span class="k">return</span> rs.rows.<span class="f">map</span>(r => ({ <span class="p">viewTime</span>: r.view_time, <span class="p">sessionId</span>: r.session_id }))<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">getViewsByDay</span>(productId) {<br>
+&nbsp;&nbsp;<span class="k">const</span> rs = <span class="k">await</span> client.<span class="f">execute</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">'SELECT day, views FROM views_by_day WHERE product_id = ?'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[productId], { <span class="p">prepare</span>: <span class="k">true</span> }<br>
+&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;<span class="k">return</span> rs.rows.<span class="f">map</span>(r => ({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">day</span>: r.day.<span class="f">toString</span>(),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">views</span>: <span class="f">Number</span>(r.views),  <span class="c">// counter → Long → Number</span><br>
+&nbsp;&nbsp;}))<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">getTopProducts</span>() {<br>
+&nbsp;&nbsp;<span class="c">// Démo TP : agrégat applicatif sur le jour courant.</span><br>
+&nbsp;&nbsp;<span class="c">// En prod : table dédiée triée, ou Spark.</span><br>
+&nbsp;&nbsp;<span class="k">const</span> rs = <span class="k">await</span> client.<span class="f">execute</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">'SELECT product_id, views FROM views_by_day WHERE day = ? ALLOW FILTERING'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[<span class="f">todayDate</span>()], { <span class="p">prepare</span>: <span class="k">true</span> }<br>
+&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;<span class="k">return</span> rs.rows<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="f">map</span>(r => ({ <span class="p">productId</span>: r.product_id, <span class="p">views</span>: <span class="f">Number</span>(r.views) }))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="f">sort</span>((a, b) => b.views - a.views)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="f">slice</span>(<span class="n">0</span>, <span class="n">5</span>)<br>
+}<br><br>
+module.exports = { recordView, getRecentViews, getViewsByDay, getTopProducts }
+      </div>
+    </div>
+    <div class="box-warning"><strong>À propos d'<code>ALLOW FILTERING</code> :</strong> on l'utilise ici pour la démo pédagogique du top produits. <strong>En production c'est un anti-pattern</strong> (scan de toutes les partitions). La bonne solution : une table <code>top_views_by_day</code> avec <code>day</code> en partition key, qu'on lit d'une seule traite.</div>
+  </div>
+
+  <h2 class="section-title">server/server.js — init au démarrage <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">javascript · server/server.js (extrait)</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="k">const</span> initCassandra = <span class="f">require</span>(<span class="s">'./scripts/initCassandra'</span>)<br><br>
+<span class="k">async function</span> <span class="f">start</span>() {<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">connectDB</span>()            <span class="c">// MongoDB</span><br>
+&nbsp;&nbsp;<span class="k">await</span> redis.<span class="f">connect</span>()         <span class="c">// Redis</span><br>
+&nbsp;&nbsp;<span class="k">try</span> { <span class="k">await</span> <span class="f">initCassandra</span>() }   <span class="c">// schéma analytics</span><br>
+&nbsp;&nbsp;<span class="k">catch</span> (e) { console.<span class="f">error</span>(<span class="s">'⚠️ Cassandra non prête :'</span>, e.message) }<br>
+&nbsp;&nbsp;app.<span class="f">listen</span>(PORT, ...)<br>
+}
+      </div>
+    </div>
+    <div class="box-info"><strong>Connexion non-bloquante</strong> (même principe que Redis en Phase 2) : si Cassandra n'est pas encore prête, on logue l'erreur sans empêcher le serveur de démarrer.</div>
+  </div>
+</div><!-- /tab-solutions -->
+
+<!-- ══════════════════════════════════ RECAP ═════════════════════════ -->
+<div id="tab-recap" class="tab-content">
+  <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+
+  <div class="section-hero">
+    <div class="section-hero-icon">📋</div>
+    <h1>Phase 3 — <span>Récap</span></h1>
+    <p>Cassandra intégré, vues produit trackées, dashboard analytics alimenté par les compteurs. Prêt à merger et passer à Neo4j.</p>
+  </div>
+
+  <h2 class="section-title">✅ Checklist avant le merge <span class="line"></span></h2>
+  <div class="card">
+    <ul class="checklist" style="gap:14px">
+      <li><code>docker compose ps</code> affiche Cassandra <code>(healthy)</code></li>
+      <li><code>cqlsh -e "USE sportshopy; DESCRIBE TABLES"</code> liste <code>product_views</code> et <code>views_by_day</code></li>
+      <li>Ouvrir une fiche produit incrémente le compteur du jour</li>
+      <li><code>GET /api/analytics/top</code> renvoie les produits triés par vues</li>
+      <li><code>GET /api/analytics/product/:id/timeline</code> renvoie la série 7 jours</li>
+      <li>AnalyticsPage affiche le top produits + la courbe</li>
+      <li>Le serveur démarre même si Cassandra n'est pas encore prête (non-bloquant)</li>
+      <li class="warn">Aucun <code>ALLOW FILTERING</code> en dehors du top de démo</li>
+    </ul>
+  </div>
+
+  <h2 class="section-title">⚡ Cheatsheet CQL + cassandra-driver <span class="line"></span></h2>
+  <div class="card">
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">CQL · Cheatsheet</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="c">// ── KEYSPACE / TABLE ──────────────────────────────────</span><br>
+CREATE KEYSPACE ks WITH replication = {...};<br>
+USE ks;  DESCRIBE TABLES;  DESCRIBE TABLE t;<br><br>
+<span class="c">// ── ÉCRITURE (INSERT = UPSERT) ────────────────────────</span><br>
+INSERT INTO t (...) VALUES (...);<br>
+UPDATE t SET cnt = cnt + 1 WHERE pk = ? AND ck = ?;   // counter<br>
+INSERT INTO t (...) VALUES (...) USING TTL 86400;     // expiration<br><br>
+<span class="c">// ── LECTURE (WHERE = partition key) ───────────────────</span><br>
+SELECT * FROM t WHERE pk = ?;<br>
+SELECT * FROM t WHERE pk = ? AND ck > ? LIMIT 10;<br><br>
+<span class="c">// ── DRIVER NODE ───────────────────────────────────────</span><br>
+await client.execute(cql, params, { prepare: true });<br>
+rs.rows            // tableau de lignes<br>
+Number(row.views)  // counter (Long) → Number
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">🗺️ Progression du projet <span class="line"></span></h2>
+  <div class="card">
+    <table class="compare-table">
+      <thead><tr><th>Phase</th><th>Base</th><th>Modèle</th><th>Usage SportShopy</th><th>Statut</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>MongoDB</td><td>Document</td><td>Catalogue produits</td><td><span class="badge-yes">✓ mergé</span></td></tr>
+        <tr><td>2</td><td>Redis</td><td>Clé-Valeur</td><td>Panier (TTL 24h)</td><td><span class="badge-yes">✓ mergé</span></td></tr>
+        <tr><td>3</td><td>Cassandra</td><td>Wide-Column</td><td>Analytics / séries temporelles</td><td><span class="badge-partial">⟳ en cours</span></td></tr>
+        <tr><td>4</td><td>Neo4j</td><td>Graphe</td><td>Recommandations produits</td><td>À venir</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div><!-- /tab-recap -->
+
+<!-- ══════════════════════════════════ GLOSSAIRE ═════════════════════ -->
+<div id="tab-glossaire" class="tab-content">
+  <div class="section-hero">
+    <div class="section-hero-icon">📖</div>
+    <h1>Glossaire <span>Cassandra</span></h1>
+    <p>20 termes essentiels du modèle orienté colonnes et de son écosystème distribué.</p>
+  </div>
+  <div class="glossary-grid">
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">01</span>Keyspace</div><div class="gl-def">Plus haut niveau de regroupement, équivalent d'une <strong>base de données</strong>. Porte la stratégie de réplication.</div><span class="gl-tag concept">concept</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">02</span>Wide-column</div><div class="gl-def">Modèle où chaque ligne d'une partition peut avoir un grand nombre de colonnes ; les « lignes larges » sont idéales pour les séries temporelles.</div><span class="gl-tag concept">concept</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">03</span>Partition key</div><div class="gl-def">Partie de la PRIMARY KEY <strong>hachée</strong> pour décider du nœud de stockage. Regroupe physiquement les lignes.</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">04</span>Clustering column</div><div class="gl-def">Colonne qui <strong>trie</strong> les lignes à l'intérieur d'une partition (ex. par timestamp DESC).</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">05</span>PRIMARY KEY</div><div class="gl-def">= (partition key, clustering columns). Identifie une ligne et conditionne ce qu'on peut filtrer.</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">06</span>CQL</div><div class="gl-def">Cassandra Query Language. Syntaxe proche de SQL mais <strong>sans JOIN</strong> ni WHERE arbitraire.</div><span class="gl-tag cql">cql</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">07</span>cqlsh</div><div class="gl-def">Shell interactif pour exécuter du CQL contre un nœud Cassandra.</div><span class="gl-tag cql">cql</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">08</span>Node / Nœud</div><div class="gl-def">Instance Cassandra. Tous les nœuds sont <strong>égaux</strong> (pas de maître).</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">09</span>Ring</div><div class="gl-def">Topologie en anneau où la responsabilité des données est répartie entre nœuds.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">10</span>Coordinator</div><div class="gl-def">Nœud qui reçoit une requête client et la route vers les bons nœuds. N'importe lequel peut jouer ce rôle.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">11</span>Replication factor</div><div class="gl-def">Nombre de copies de chaque donnée dans le cluster (RF=3 en prod, RF=1 en TP).</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">12</span>Consistency level</div><div class="gl-def">Nombre de réplicas devant répondre : <code>ONE</code>, <code>QUORUM</code>, <code>ALL</code>. Réglable par requête.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">13</span>Datacenter</div><div class="gl-def">Regroupement logique de nœuds. Par défaut <code>datacenter1</code> ; requis par le driver Node.</div><span class="gl-tag archi">archi</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">14</span>Counter</div><div class="gl-def">Type spécial supportant l'incrément atomique distribué (<code>x = x + 1</code>). Idéal pour les compteurs de vues.</div><span class="gl-tag cql">cql</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">15</span>UPSERT</div><div class="gl-def">En Cassandra, <code>INSERT</code> écrase silencieusement si la clé existe : insert et update sont la même opération.</div><span class="gl-tag cql">cql</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">16</span>Dénormalisation</div><div class="gl-def">Duplication volontaire des données dans plusieurs tables, une par requête. <strong>Bonne pratique</strong> ici.</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">17</span>Query-first</div><div class="gl-def">Méthodologie : lister les requêtes d'abord, puis concevoir une table par requête.</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">18</span>Hot partition</div><div class="gl-def">Partition recevant une charge disproportionnée à cause d'une partition key mal choisie. À éviter.</div><span class="gl-tag modele">modèle</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">19</span>ALLOW FILTERING</div><div class="gl-def">Force un scan coûteux pour des requêtes non couvertes par la clé. <strong>Anti-pattern</strong> en production.</div><span class="gl-tag cql">cql</span></div>
+    <div class="gl-card"><div class="gl-term"><span class="gl-num">20</span>TTL</div><div class="gl-def"><code>USING TTL</code> : expiration automatique d'une ligne après N secondes. Utile pour purger les vieux événements.</div><span class="gl-tag cql">cql</span></div>
+  </div>
+</div><!-- /tab-glossaire -->
+
+<!-- ══════════════════════════════════ QUIZ ══════════════════════════ -->
+<div id="tab-quiz" class="tab-content">
+  <div class="section-hero">
+    <div class="section-hero-icon">🎯</div>
+    <h1>Questionnaire <span>Cassandra</span></h1>
+    <p>8 questions, une à la fois, avec correction explicative. Valide ta compréhension du modèle orienté colonnes.</p>
+  </div>
+  <div id="quiz-mount"></div>
+</div><!-- /tab-quiz -->
+
+</main>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── QUIZ ──────────────────────────────────────────────── */
+const QUESTIONS = [
+  {
+    q: "Dans une PRIMARY KEY ((product_id), view_time), quel est le rôle de product_id ?",
+    options: [
+      "C'est la clé de partition : elle détermine sur quel nœud la donnée est stockée",
+      "C'est une clustering column qui trie les lignes",
+      "C'est une simple colonne indexée",
+      "C'est un counter incrémenté à chaque vue"
+    ],
+    correct: 0,
+    expl: "La partie entre parenthèses est la partition key. Elle est hachée pour placer la donnée sur un nœud et regroupe physiquement toutes les lignes du même produit."
+  },
+  {
+    q: "Pourquoi Cassandra est-il adapté à l'analytics de SportShopy plutôt que MongoDB ?",
+    options: [
+      "Parce qu'il supporte les jointures complexes",
+      "Parce qu'il est optimisé pour l'écriture massive de séries temporelles append-only",
+      "Parce qu'il garde tout en RAM comme Redis",
+      "Parce qu'il permet des requêtes ad-hoc flexibles"
+    ],
+    correct: 1,
+    expl: "L'analytics génère énormément d'écritures append-only (chaque vue = une ligne). Cassandra est write-optimized et scale horizontalement, là où MongoDB est plutôt lecture-dominante."
+  },
+  {
+    q: "Quelle requête CQL est VALIDE sur la table product_views (PK = ((product_id), view_time)) ?",
+    options: [
+      "SELECT * FROM product_views WHERE session_id = 'sess-42'",
+      "SELECT * FROM product_views WHERE view_time > '2026-06-01'",
+      "SELECT * FROM product_views WHERE product_id = 'p-run-001'",
+      "SELECT * FROM product_views JOIN products ON ..."
+    ],
+    correct: 2,
+    expl: "On ne peut filtrer que sur la partition key (et les clustering columns dans l'ordre). Filtrer sur session_id ou seulement view_time est interdit, et les JOIN n'existent pas en CQL."
+  },
+  {
+    q: "Que fait un INSERT sur une clé primaire qui existe déjà ?",
+    options: [
+      "Il lève une erreur de clé dupliquée",
+      "Il écrase silencieusement la ligne existante (UPSERT)",
+      "Il crée une seconde ligne avec la même clé",
+      "Il est ignoré"
+    ],
+    correct: 1,
+    expl: "En Cassandra, INSERT et UPDATE sont la même opération : un UPSERT. Écrire sur une clé existante remplace les valeurs sans erreur."
+  },
+  {
+    q: "Pourquoi utilise-t-on un healthcheck dans le docker-compose de Cassandra ?",
+    options: [
+      "Pour réduire la consommation mémoire",
+      "Parce que Cassandra démarre lentement (60-90s) et le serveur Node planterait en se connectant trop tôt",
+      "Pour activer la réplication",
+      "Pour chiffrer les connexions"
+    ],
+    correct: 1,
+    expl: "Cassandra est lent à démarrer. Le healthcheck permet d'attendre le statut (healthy) avant de considérer le service comme disponible, évitant des erreurs de connexion prématurées."
+  },
+  {
+    q: "Pour compter les vues par jour, quel type de colonne est le plus adapté ?",
+    options: [
+      "text",
+      "timestamp",
+      "counter",
+      "blob"
+    ],
+    correct: 2,
+    expl: "Le type counter supporte l'incrément atomique distribué (views = views + 1). C'est exactement ce qu'il faut pour un compteur d'événements concurrent."
+  },
+  {
+    q: "Qu'est-ce que la modélisation « query-first » ?",
+    options: [
+      "Normaliser les données puis écrire les requêtes",
+      "Lister d'abord les requêtes, puis créer une table dédiée par requête (quitte à dupliquer)",
+      "Toujours utiliser ALLOW FILTERING",
+      "Indexer chaque colonne automatiquement"
+    ],
+    correct: 1,
+    expl: "L'inverse du SQL : on part des requêtes connues et on dénormalise en créant une table par pattern d'accès. La duplication de données est ici une bonne pratique."
+  },
+  {
+    q: "Pourquoi ALLOW FILTERING est-il déconseillé en production ?",
+    options: [
+      "Parce qu'il chiffre les données",
+      "Parce qu'il force un scan coûteux de toutes les partitions au lieu de cibler une clé",
+      "Parce qu'il supprime les données filtrées",
+      "Parce qu'il n'est compatible qu'avec Docker"
+    ],
+    correct: 1,
+    expl: "ALLOW FILTERING contourne le modèle de clés en scannant largement le cluster : lent et non scalable. La bonne solution est une table dédiée modélisée pour la requête."
+  }
+];
+
+let qIndex = 0, qScore = 0, answered = false;
+
+function renderQuestion() {
+  const mount = document.getElementById('quiz-mount');
+  if (qIndex >= QUESTIONS.length) { renderScore(); return; }
+  const item = QUESTIONS[qIndex];
+  answered = false;
+  const pct = Math.round((qIndex / QUESTIONS.length) * 100);
+  mount.innerHTML = `
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-counter">Q${qIndex + 1} / ${QUESTIONS.length}</span>
+        <div class="q-mini-bar"><div class="q-mini-fill" style="width:${pct}%"></div></div>
+        <span class="q-counter">Score ${qScore}</span>
+      </div>
+      <div class="q-text">${item.q}</div>
+      <div class="q-options" id="q-opts">
+        ${item.options.map((o, i) => `
+          <button class="q-opt" data-i="${i}" onclick="selectOpt(${i})">
+            <span class="q-opt-letter">${String.fromCharCode(65 + i)}</span>${o}
+          </button>`).join('')}
+      </div>
+      <div class="q-feedback" id="q-fb"></div>
+      <div class="q-actions">
+        <button class="btn-validate" id="q-validate" disabled onclick="validateOpt()">Valider</button>
+        <button class="btn-next" id="q-next" onclick="nextQuestion()">Suivant →</button>
+      </div>
+    </div>`;
+}
+
+let selected = null;
+function selectOpt(i) {
+  if (answered) return;
+  selected = i;
+  document.querySelectorAll('#q-opts .q-opt').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`#q-opts .q-opt[data-i="${i}"]`).classList.add('selected');
+  document.getElementById('q-validate').disabled = false;
+}
+
+function validateOpt() {
+  if (answered || selected === null) return;
+  answered = true;
+  const item = QUESTIONS[qIndex];
+  const opts = document.querySelectorAll('#q-opts .q-opt');
+  opts.forEach(b => {
+    b.disabled = true;
+    const i = Number(b.dataset.i);
+    if (i === item.correct) b.classList.add('correct');
+    else if (i === selected) b.classList.add('wrong');
+  });
+  const fb = document.getElementById('q-fb');
+  const ok = selected === item.correct;
+  if (ok) qScore++;
+  fb.className = 'q-feedback show ' + (ok ? 'ok' : 'ko');
+  fb.innerHTML = `<div class="fb-title">${ok ? '✓ Correct' : '✗ Incorrect'}</div><div class="fb-expl">${item.expl}</div>`;
+  document.getElementById('q-validate').style.display = 'none';
+  document.getElementById('q-next').style.display = 'inline-block';
+  selected = null;
+}
+
+function nextQuestion() { qIndex++; renderQuestion(); }
+
+function renderScore() {
+  const pct = Math.round((qScore / QUESTIONS.length) * 100);
+  const mount = document.getElementById('quiz-mount');
+  let msg = pct === 100 ? 'Parfait ! 🏆' : pct >= 75 ? 'Très bien ! 🎯' : pct >= 50 ? 'Pas mal, relis le glossaire 📖' : 'À retravailler 💪';
+  mount.innerHTML = `
+    <div class="quiz-score show">
+      <div class="score-big">${qScore}/${QUESTIONS.length}</div>
+      <div class="score-label">${msg} — ${pct}%</div>
+      <button class="btn-retry" onclick="restartQuiz()">↻ Recommencer</button>
+    </div>`;
+}
+
+function restartQuiz() { qIndex = 0; qScore = 0; selected = null; renderQuestion(); }
+
+renderQuestion();
+</script>
+</body>
+</html>
