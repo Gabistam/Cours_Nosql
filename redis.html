@@ -257,6 +257,23 @@ p strong { color:var(--text); }
 
 @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 .tab-content.active { animation:fadeIn .35s ease; }
+
+/* ACCORDION */
+.accordion-wrap { display:flex; flex-direction:column; gap:10px; margin:16px 0; }
+.accordion-item { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.accordion-trigger { width:100%; background:none; border:none; padding:14px 20px; display:flex; align-items:center; gap:12px; cursor:pointer; text-align:left; transition:background .15s; }
+.accordion-trigger:hover { background:rgba(255,255,255,.03); }
+.accordion-trigger.open { background:rgba(220,38,38,.05); border-bottom:1px solid var(--border); }
+.accordion-filepath { font-family:'JetBrains Mono',monospace; font-size:.8rem; font-weight:700; color:var(--redis-l); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.accordion-badge { font-size:.68rem; padding:2px 9px; border-radius:10px; font-family:'JetBrains Mono',monospace; white-space:nowrap; flex-shrink:0; }
+.accordion-badge.cree { background:rgba(16,185,129,.12); color:#6ee7b7; border:1px solid rgba(16,185,129,.25); }
+.accordion-badge.modifie { background:rgba(245,158,11,.12); color:#fcd34d; border:1px solid rgba(245,158,11,.25); }
+.accordion-arrow { color:var(--text-dim); font-size:.7rem; transition:transform .2s; margin-left:8px; flex-shrink:0; }
+.accordion-trigger.open .accordion-arrow { transform:rotate(180deg); }
+.accordion-body { display:none; padding:24px 28px; }
+.accordion-body.open { display:block; animation:fadeIn .2s ease; }
+.section-label { font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-dim); margin:32px 0 14px; display:flex; align-items:center; gap:10px; }
+.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
 </style>
 </head>
 <body>
@@ -332,7 +349,7 @@ p strong { color:var(--text); }
   </div>
 
   <h2 class="section-title">🗂️ Les 5 types de données Redis <span class="line"></span></h2>
-  <div class="grid-2">
+  <div class="grid-3" style="margin-bottom:20px">
     <div class="card">
       <div class="card-header"><div class="card-icon red">📝</div><div><div class="card-title">String</div><div class="card-subtitle">Le type de base — utilisé dans SportShopy</div></div></div>
       <p>Une clé → une valeur texte (ou JSON sérialisé). C'est le type qu'on utilise pour le panier : on sérialise le tableau d'items en JSON et on le stocke dans une clé <code>cart:{sessionId}</code>.</p>
@@ -370,14 +387,27 @@ LRANGE <span class="r">queue:emails</span> <span class="n">0</span> <span class=
       </div>
     </div>
     <div class="card">
+      <div class="card-header"><div class="card-icon cyan">🔗</div><div><div class="card-title">Set</div><div class="card-subtitle">Ensemble sans doublons</div></div></div>
+      <p>Collection de chaînes <strong>uniques</strong> sans ordre garanti. Idéal pour les tags, les utilisateurs connectés, ou les systèmes de vote (un utilisateur = un vote).</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+        <div class="code-body">
+SADD <span class="r">online:users</span> <span class="s">"alice"</span> <span class="s">"bob"</span>  <span class="c"># ajoute (ignore les doublons)</span><br>
+SISMEMBER <span class="r">online:users</span> <span class="s">"alice"</span>   <span class="c"># 1 si présent, 0 sinon</span><br>
+SMEMBERS <span class="r">online:users</span>             <span class="c"># tous les membres</span><br>
+SREM <span class="r">online:users</span> <span class="s">"bob"</span>           <span class="c"># retirer un membre</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-header"><div class="card-icon green">🔢</div><div><div class="card-title">Sorted Set</div><div class="card-subtitle">Ensemble ordonné par score</div></div></div>
       <p>Ensemble de membres triés par un score numérique. Idéal pour les classements, leaderboards, ou tags populaires.</p>
       <div class="code-block">
         <div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
         <div class="code-body">
-ZADD <span class="r">leaderboard</span> <span class="n">1500</span> <span class="s">"Alice"</span><br>
-ZADD <span class="r">leaderboard</span> <span class="n">2300</span> <span class="s">"Bob"</span><br>
-ZRANGE <span class="r">leaderboard</span> <span class="n">0</span> <span class="n">-1</span> WITHSCORES REV
+ZADD <span class="r">leaderboard</span> <span class="n">1500</span> <span class="s">"Alice"</span>         <span class="c"># score 1500</span><br>
+ZADD <span class="r">leaderboard</span> <span class="n">2300</span> <span class="s">"Bob"</span>           <span class="c"># score 2300</span><br>
+ZRANGE <span class="r">leaderboard</span> <span class="n">0</span> <span class="n">-1</span> WITHSCORES REV <span class="c"># top scores (décroissant)</span>
         </div>
       </div>
     </div>
@@ -406,6 +436,33 @@ ZRANGE <span class="r">leaderboard</span> <span class="n">0</span> <span class="
     <div class="section-hero-icon">⚙️</div>
     <h1>Redis en <span>pratique</span></h1>
     <p>Lancer Redis avec Docker, explorer les données avec Redis Commander, pratiquer les commandes essentielles.</p>
+  </div>
+
+  <div class="box-warning" style="margin-bottom:28px"><strong>Prérequis :</strong> <strong>Docker Desktop</strong> doit être installé et démarré avant toute commande Docker. Si <code>docker info</code> retourne une erreur, ouvre Docker Desktop et attends que le daemon soit prêt.
+  <div class="code-block" style="margin:12px 0 0"><div class="code-header"><span class="code-lang">bash · vérification</span><div class="code-dots"><span></span><span></span><span></span></div></div><div class="code-body">docker --version  <span class="c"># ex : Docker version 27.x.x</span><br>docker info       <span class="c"># erreur ici = Docker Desktop n'est pas démarré</span></div></div></div>
+
+  <h2 class="section-title">📄 Comprendre le docker-compose.yml <span class="line"></span></h2>
+  <div class="card">
+    <div class="card-header"><div class="card-icon amber">📄</div><div><div class="card-title">docker-compose.yml · racine du projet</div><div class="card-subtitle">Ce fichier existe déjà — la commande le lit, elle ne le crée pas</div></div></div>
+    <p>Le fichier <code>docker-compose.yml</code> est <strong>déjà présent à la racine du projet</strong>. <code>docker compose up</code> le lit pour savoir quels conteneurs lancer et comment les configurer. Il faut comprendre ce qu'il contient avant de lancer la commande.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">yaml · docker-compose.yml (bloc Redis)</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-body">
+<span class="p">redis</span>:<br>
+&nbsp;&nbsp;<span class="p">image</span>: <span class="s">redis:7-alpine</span>                    <span class="c"># image officielle Redis, Alpine = légère (~50 Mo vs 120 Mo)</span><br>
+&nbsp;&nbsp;<span class="p">container_name</span>: <span class="s">sportshopy-redis</span>          <span class="c"># nom fixe → utilisé par docker exec et les logs</span><br>
+&nbsp;&nbsp;<span class="p">ports</span>: [<span class="s">'6379:6379'</span>]                      <span class="c"># port_hôte:port_conteneur — ton app accède via localhost:6379</span><br>
+&nbsp;&nbsp;<span class="p">volumes</span>: [<span class="s">'redis_data:/data'</span>]              <span class="c"># données persistées même après docker compose down</span><br>
+&nbsp;&nbsp;<span class="p">command</span>: <span class="s">redis-server --appendonly yes</span>   <span class="c"># active la persistance AOF (rejeu du log au redémarrage)</span><br><br>
+<span class="p">redis-commander</span>:<br>
+&nbsp;&nbsp;<span class="p">image</span>: <span class="s">rediscommander/redis-commander:latest</span>  <span class="c"># UI web pour visualiser les données</span><br>
+&nbsp;&nbsp;<span class="p">environment</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="r">REDIS_HOSTS</span>=<span class="s">local:redis:6379</span>           <span class="c"># ⚠ "redis" = nom du service Docker, pas localhost</span><br>
+&nbsp;&nbsp;<span class="p">ports</span>: [<span class="s">'8081:8081'</span>]<br>
+&nbsp;&nbsp;<span class="p">depends_on</span>: [<span class="s">redis</span>]                       <span class="c"># garantit que redis démarre en premier</span>
+      </div>
+    </div>
+    <div class="box-warning"><strong>Pourquoi <code>redis</code> et non <code>localhost</code> dans <code>REDIS_HOSTS</code> ?</strong> À l'intérieur du réseau Docker, les conteneurs se joignent par leur <strong>nom de service</strong> (ici <code>redis</code>). <code>localhost</code> ne pointe que vers le conteneur lui-même. Ton application Node.js utilise bien <code>localhost:6379</code> car elle tourne <em>en dehors</em> de Docker.</div>
   </div>
 
   <h2 class="section-title">🐳 Lancer Redis avec Docker <span class="line"></span></h2>
@@ -469,18 +526,712 @@ GET <span class="r">cart:&lt;ton-session-id&gt;</span><br><br>
     </div>
   </div>
 
-  <h2 class="section-title">🖥️ Redis Commander <span class="line"></span></h2>
+  <h2 class="section-title">🖥️ Redis Commander — Prise en main de l'interface <span class="line"></span></h2>
+
+  <!-- Zone diagram -->
   <div class="card">
-    <div class="card-header"><div class="card-icon purple">🖥️</div><div><div class="card-title">Interface visuelle</div><div class="card-subtitle">http://localhost:8081</div></div></div>
-    <p>Redis Commander est une UI web qui permet de naviguer dans les clés, voir les valeurs et le TTL restant sans passer par le CLI.</p>
-    <ul class="checklist" style="margin-top:8px">
-      <li>Ouvre <code>http://localhost:8081</code> dans le navigateur</li>
-      <li>Dans le panneau gauche, cherche les clés <code>cart:*</code></li>
-      <li>Clique sur une clé pour voir la valeur JSON et le TTL</li>
-      <li>Tu peux modifier ou supprimer une clé directement depuis l'UI</li>
-    </ul>
-    <div class="box-warning"><strong>En production</strong>, Redis Commander ne doit jamais être exposé publiquement. C'est un outil de développement uniquement.</div>
+    <div class="card-header"><div class="card-icon purple">🖥️</div><div><div class="card-title">Les 3 zones de l'interface</div><div class="card-subtitle">Ouvre http://localhost:8081 dans ton navigateur</div></div></div>
+    <p>Avant de créer ta première clé, repère les 3 zones de Redis Commander.</p>
+
+    <div style="border:2px solid #6366f1;border-radius:10px;overflow:hidden;margin:20px 0;font-size:12px">
+      <div style="background:#312e81;padding:9px 14px;display:flex;align-items:center;gap:12px">
+        <span style="background:#6366f1;color:#fff;padding:2px 10px;border-radius:4px;font-weight:700;font-size:11px">① Barre du haut</span>
+        <span style="color:#a5b4fc;font-size:11px">Nom de la connexion · Sélecteur de DB · Filtre · <strong style="color:#fff">+ Add Key</strong></span>
+      </div>
+      <div style="display:flex;min-height:130px">
+        <div style="width:195px;border-right:1px solid #312e81;padding:10px;background:rgba(99,102,241,.06)">
+          <div style="color:#818cf8;font-size:11px;font-weight:700;margin-bottom:8px">② Panneau des clés</div>
+          <div style="color:#64748b;font-size:11px;line-height:1.6">
+            Liste de toutes les clés<br>
+            Badge de type · TTL affiché<br>
+            Icône 🗑️ pour supprimer
+          </div>
+        </div>
+        <div style="flex:1;padding:14px">
+          <div style="color:#818cf8;font-size:11px;font-weight:700;margin-bottom:8px">③ Zone d'édition</div>
+          <div style="color:#64748b;font-size:11px;line-height:1.6">Contenu de la clé sélectionnée · Éditeur adapté au type<br>
+          (texte libre pour String · tableau pour Hash · liste numérotée pour List…)<br>
+          Champ TTL modifiable · Bouton Save</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-top:4px;gap:12px">
+      <div style="padding:12px;background:rgba(99,102,241,.07);border-radius:8px;border:1px solid rgba(99,102,241,.2)">
+        <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#818cf8">① Barre du haut</div>
+        <ul style="font-size:12px;padding-left:14px;margin:0;line-height:1.7">
+          <li>Sélecteur de base (<code>db0</code> par défaut)</li>
+          <li>Champ de filtre par nom de clé</li>
+          <li><strong>+ Add Key</strong> — crée une nouvelle clé</li>
+        </ul>
+      </div>
+      <div style="padding:12px;background:rgba(99,102,241,.07);border-radius:8px;border:1px solid rgba(99,102,241,.2)">
+        <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#818cf8">② Panneau des clés</div>
+        <ul style="font-size:12px;padding-left:14px;margin:0;line-height:1.7">
+          <li>Toutes les clés de la base</li>
+          <li>Badge coloré = type Redis</li>
+          <li>TTL restant sous le nom</li>
+          <li>🗑️ = suppression directe</li>
+        </ul>
+      </div>
+      <div style="padding:12px;background:rgba(99,102,241,.07);border-radius:8px;border:1px solid rgba(99,102,241,.2)">
+        <div style="font-weight:700;font-size:12px;margin-bottom:6px;color:#818cf8">③ Zone d'édition</div>
+        <ul style="font-size:12px;padding-left:14px;margin:0;line-height:1.7">
+          <li>Contenu de la clé sélectionnée</li>
+          <li>Éditeur change selon le type</li>
+          <li>TTL modifiable en direct</li>
+          <li>Bouton Save / Delete key</li>
+        </ul>
+      </div>
+    </div>
+    <div class="box-warning" style="margin-top:16px"><strong>En production</strong>, Redis Commander ne doit jamais être exposé publiquement — il donne un accès complet en lecture ET écriture à toutes les données Redis sans authentification.</div>
   </div>
+
+  <!-- Créer une clé -->
+  <div class="card">
+    <div class="card-header"><div class="card-icon red">➕</div><div><div class="card-title">Créer une clé — le workflow Add Key</div><div class="card-subtitle">Le même formulaire pour les 5 types</div></div></div>
+    <p>Toutes les créations passent par le bouton <strong>+ Add Key</strong>. Le formulaire s'adapte selon le type choisi.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Cliquer sur <strong>+ Add Key</strong> dans la barre du haut</div>
+          <div class="step-desc">Un formulaire s'ouvre à droite ou en panneau latéral selon la version de Commander.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Choisir le type dans le menu déroulant</div>
+          <div class="step-desc"><strong>String</strong>, <strong>List</strong>, <strong>Set</strong>, <strong>Hash</strong> ou <strong>Sorted Set (ZSet)</strong> — le formulaire s'adapte immédiatement.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Saisir le nom de la clé</div>
+          <div class="step-desc">Convention : <code>namespace:identifiant</code> — ex : <code>user:42</code>, <code>cart:session-abc</code>, <code>tags:p-run-001</code>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">4</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Définir le TTL (optionnel)</div>
+          <div class="step-desc">En secondes. Laisser vide ou <code>-1</code> = clé permanente. Ex : <code>300</code> = 5 min · <code>86400</code> = 24h.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">5</div></div>
+        <div class="step-content">
+          <div class="step-title">Valider — la clé apparaît dans le panneau gauche</div>
+          <div class="step-desc">Pour les types composés (Hash, List, Set, Sorted Set), la clé est créée vide. Clique dessus pour ouvrir l'éditeur et ajouter les premières valeurs.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">🏋️ Exercices Redis Commander — les 5 types <span class="line"></span></h2>
+  <div class="box-info"><strong>Prérequis :</strong> Docker tourne et Redis Commander est accessible sur <code>http://localhost:8081</code>. Aucune commande CLI — toutes les actions se font dans le navigateur.</div>
+
+  <!-- EXO COMMANDER A — String -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-header"><div class="card-icon red">🔤</div><div><div class="card-title">Exo A — String : annonce promo avec expiration</div><div class="card-subtitle">Créer, lire, modifier, observer le TTL</div></div></div>
+    <p>Objectif : comprendre le cycle de vie d'une String — création avec TTL, modification de la valeur, différence entre clé permanente et clé éphémère.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer une clé avec TTL</div>
+          <div class="step-desc">+ Add Key → Type : <strong>String</strong><br>
+          Nom : <code>promo:bienvenue</code> · Valeur : <code>Bienvenue ! -10% avec SPORT10</code> · TTL : <code>120</code> (2 min)</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Observer le TTL dans le panneau gauche</div>
+          <div class="step-desc">La clé apparaît avec le badge <strong>string</strong> et un TTL décroissant. Rafraîchis la page après 10 secondes — le TTL a diminué. Après 120s, la clé disparaît seule.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer une clé sans TTL pour comparer</div>
+          <div class="step-desc">+ Add Key → Nom : <code>config:maintenance</code> · Valeur : <code>false</code> · TTL : vide<br>
+          Dans la liste, compare les deux clés : l'une a un TTL décroissant, l'autre affiche <em>no expire</em>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">4</div></div>
+        <div class="step-content">
+          <div class="step-title">Modifier la valeur de config:maintenance</div>
+          <div class="step-desc">Clique sur la clé → zone d'édition → change <code>false</code> en <code>true</code> → <strong>Save</strong>. La valeur est mise à jour instantanément, le TTL reste "no expire".</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-info"><strong>À retenir :</strong> modifier la valeur depuis Commander ne renouvelle pas le TTL — seule une modification du champ TTL dans l'éditeur le réinitialise.</div>
+  </div>
+
+  <!-- EXO COMMANDER B — Hash -->
+  <div class="card">
+    <div class="card-header"><div class="card-icon amber">🗂️</div><div><div class="card-title">Exo B — Hash : fiche produit</div><div class="card-subtitle">Un objet avec des champs nommés — modifiable champ par champ</div></div></div>
+    <p>Objectif : créer un Hash, ajouter des champs, modifier un seul champ sans toucher aux autres, puis supprimer un champ.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer le Hash</div>
+          <div class="step-desc">+ Add Key → Type : <strong>Hash</strong> · Nom : <code>produit:p-run-001</code> · TTL : vide<br>
+          Commander crée la clé vide. L'éditeur s'ouvre avec un tableau <strong>field / value</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Ajouter 4 champs via "Add field"</div>
+          <div class="step-desc">Utilise le formulaire en bas du tableau, un champ à la fois :<br>
+          <code>name</code> → <code>Nike Pegasus 40</code><br>
+          <code>prix</code> → <code>129.99</code><br>
+          <code>stock</code> → <code>42</code><br>
+          <code>categorie</code> → <code>running</code></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Modifier uniquement le stock</div>
+          <div class="step-desc">Clique sur la valeur <code>42</code> du champ <code>stock</code> → modifie en <code>41</code> → Save. Observe : seul ce champ change. Les champs <code>name</code>, <code>prix</code> et <code>categorie</code> sont intacts.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">4</div></div>
+        <div class="step-content">
+          <div class="step-title">Supprimer le champ categorie</div>
+          <div class="step-desc">Clique sur 🗑️ à droite de la ligne <code>categorie</code>. La clé <code>produit:p-run-001</code> existe toujours avec 3 champs. Compare avec une String JSON : ici, supprimer un champ ne nécessite pas de réécrire tout le document.</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-success"><strong>Hash vs String JSON :</strong> modifier <code>stock</code> de 42 à 41 ne touche pas aux autres champs. Avec une String JSON, il faudrait GET → JSON.parse → modifier → JSON.stringify → SET — 3 opérations au lieu d'une.</div>
+  </div>
+
+  <!-- EXO COMMANDER C — List -->
+  <div class="card">
+    <div class="card-header"><div class="card-icon blue">📋</div><div><div class="card-title">Exo C — List : historique de navigation</div><div class="card-subtitle">Séquence ordonnée — l'index d'insertion est conservé</div></div></div>
+    <p>Objectif : créer une List, ajouter des éléments, observer l'indexation et comprendre la réindexation lors d'une suppression.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer la List</div>
+          <div class="step-desc">+ Add Key → Type : <strong>List</strong> · Nom : <code>historique:sess-abc</code> · TTL : <code>3600</code><br>
+          Premier élément (champ Value) : <code>p-run-001</code></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Ajouter 2 éléments supplémentaires</div>
+          <div class="step-desc">Dans l'éditeur List → "+ Add element" :<br>
+          <code>p-foot-003</code> puis <code>p-fit-007</code><br>
+          L'index est affiché à gauche de chaque élément (commence à 0).</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Observer l'ordre d'affichage</div>
+          <div class="step-desc">Commander affiche les éléments avec leur index : <code>[0]</code>, <code>[1]</code>, <code>[2]</code>. L'ordre dépend du côté d'insertion (tête ou queue). Note l'index de chaque produit.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">4</div></div>
+        <div class="step-content">
+          <div class="step-title">Supprimer l'élément du milieu et observer la réindexation</div>
+          <div class="step-desc">Clique sur 🗑️ à droite de <code>p-foot-003</code>. L'élément qui était à l'index <code>[2]</code> passe à l'index <code>[1]</code>. Conclusion : <strong>ne jamais se fier à l'index d'un élément dans une List</strong> — il change à chaque suppression.</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-redis"><strong>List ≠ tableau JS :</strong> une List Redis est optimisée pour ajouter/retirer en tête ou queue (O(1)). L'accès par index est O(n). Utilise-la pour les files d'attente et historiques, pas pour la recherche par position.</div>
+  </div>
+
+  <!-- EXO COMMANDER D — Set -->
+  <div class="card">
+    <div class="card-header"><div class="card-icon green">🏷️</div><div><div class="card-title">Exo D — Set : tags d'un produit</div><div class="card-subtitle">Collection non ordonnée — les doublons sont refusés automatiquement</div></div></div>
+    <p>Objectif : créer un Set, observer le rejet silencieux des doublons et la notion d'ordre non garanti.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer le Set</div>
+          <div class="step-desc">+ Add Key → Type : <strong>Set</strong> · Nom : <code>tags:p-run-001</code> · TTL : vide<br>
+          Premier membre : <code>running</code></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Ajouter 3 membres via "Add member"</div>
+          <div class="step-desc"><code>nike</code> · <code>promo</code> · <code>homme</code><br>
+          Le Set affiche 4 membres au total.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Tenter d'ajouter un doublon</div>
+          <div class="step-desc">Essaie d'ajouter <code>running</code> à nouveau. Commander envoie la commande — Redis répond <code>0</code> (rien n'a changé). La liste reste à 4 membres. <strong>Aucune erreur, Redis ignore simplement le doublon.</strong></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">4</div></div>
+        <div class="step-content">
+          <div class="step-title">Rafraîchir la page et observer l'ordre</div>
+          <div class="step-desc">Les 4 membres peuvent apparaître dans n'importe quel ordre à chaque rafraîchissement — Redis ne garantit pas l'ordre d'un Set. Si l'ordre est important, il faut un Sorted Set.</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-info"><strong>Cas d'usage dans SportShopy :</strong> stocker les IDs des produits déjà consultés par une session. SADD à chaque visite de fiche produit — pas besoin de vérifier si le produit est déjà dans la liste avant d'ajouter.</div>
+  </div>
+
+  <!-- EXO COMMANDER E — Sorted Set -->
+  <div class="card">
+    <div class="card-header"><div class="card-icon purple">🏆</div><div><div class="card-title">Exo E — Sorted Set : classement des produits les plus vus</div><div class="card-subtitle">Set ordonné par score numérique — tri automatique à chaque modification</div></div></div>
+    <p>Objectif : créer un Sorted Set, observer le tri automatique par score, puis modifier un score pour voir le re-tri immédiat.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer le Sorted Set</div>
+          <div class="step-desc">+ Add Key → Type : <strong>Sorted Set (ZSet)</strong> · Nom : <code>vues:produits</code> · TTL : vide<br>
+          Premier membre — Score : <code>142</code> · Member : <code>p-run-001</code></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Ajouter 3 membres dans le désordre</div>
+          <div class="step-desc">Via "+ Add member", en entrant les scores dans cet ordre volontairement mélangé :<br>
+          Score <code>89</code> · <code>p-foot-003</code><br>
+          Score <code>211</code> · <code>p-fit-007</code><br>
+          Score <code>67</code> · <code>p-run-002</code></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Observer le tri automatique</div>
+          <div class="step-desc">Malgré l'ordre d'insertion, Commander affiche les membres <strong>triés par score croissant</strong> :<br>
+          <code>p-run-002</code> (67) → <code>p-foot-003</code> (89) → <code>p-run-001</code> (142) → <code>p-fit-007</code> (211)</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">4</div></div>
+        <div class="step-content">
+          <div class="step-title">Modifier le score de p-run-002 et observer le re-tri</div>
+          <div class="step-desc">Clique sur le score <code>67</code> de <code>p-run-002</code> → modifie en <code>250</code> → Save.<br>
+          <code>p-run-002</code> remonte automatiquement en dernière position. Aucune action sur les autres membres — Redis maintient le tri en O(log n).</div>
+        </div>
+      </div>
+    </div>
+    <div class="box-success"><strong>Commander affiche en ordre croissant</strong> (score le plus bas en haut). En production avec <code>ZRANGE ... REV</code>, on inverse pour obtenir un "top" — le produit le plus vu en premier.</div>
+  </div>
+
+  <h2 class="section-title">🏋️ Exercices CLI — les commandes essentielles <span class="line"></span></h2>
+  <div class="box-info"><strong>Prérequis :</strong> Redis tourne via Docker (<code>docker compose up redis -d</code>) et tu es connecté au CLI (<code>docker exec -it sportshopy-redis redis-cli</code>).</div>
+
+  <!-- EXO 1 -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-header">
+      <div class="card-icon red">1️⃣</div>
+      <div>
+        <div class="card-title">Exo 1 — Mon premier SET / GET</div>
+        <div class="card-subtitle">Stocker une valeur et la relire</div>
+      </div>
+    </div>
+    <p>Objectif : comprendre qu'une clé Redis est une simple chaîne de caractères et que la valeur peut être n'importe quel texte.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Stocker ton prénom</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">SET <span class="r">monprenom</span> <span class="s">"Alice"</span></div></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Relire la valeur</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">GET <span class="r">monprenom</span></div></div>
+          <div class="result-panel"><span class="val">"Alice"</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div></div>
+        <div class="step-content">
+          <div class="step-title">Vérifier le TTL — il ne doit pas expirer</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">TTL <span class="r">monprenom</span></div></div>
+          <div class="result-panel"><span class="num">-1</span>  <span style="color:var(--text-dim)">← pas de TTL défini, la clé est permanente</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="box-success"><strong>À retenir :</strong> Sans <code>EX</code>, la clé ne expire jamais. C'est différent du comportement qu'on veut pour un panier !</div>
+  </div>
+
+  <!-- EXO 2 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon amber">2️⃣</div>
+      <div>
+        <div class="card-title">Exo 2 — TTL et expiration automatique</div>
+        <div class="card-subtitle">Observer une clé disparaître toute seule</div>
+      </div>
+    </div>
+    <p>Objectif : visualiser le fonctionnement du TTL en temps réel avec une durée courte.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer une clé qui expire dans 15 secondes</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">SET <span class="r">ephemere</span> <span class="s">"je disparais bientôt"</span> EX <span class="n">15</span></div></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Lire le TTL immédiatement puis 5 secondes après</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">TTL <span class="r">ephemere</span>  <span class="c"># ~14</span><br>
+TTL <span class="r">ephemere</span>  <span class="c"># ~9 (5 sec plus tard)</span></div></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div></div>
+        <div class="step-content">
+          <div class="step-title">Attendre 15 secondes puis tenter de la lire</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">GET <span class="r">ephemere</span><br>
+TTL <span class="r">ephemere</span></div></div>
+          <div class="result-panel"><span class="ok">(nil)</span><br><span class="num">-2</span>  <span style="color:var(--text-dim)">← clé inexistante</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="box-redis"><strong>Différence -1 vs -2 :</strong> <code>-1</code> = clé existe sans TTL. <code>-2</code> = clé absente ou expirée. À tester dans votre code avant de traiter une valeur <code>null</code>.</div>
+  </div>
+
+  <!-- EXO 3 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon blue">3️⃣</div>
+      <div>
+        <div class="card-title">Exo 3 — Compteur atomique avec INCR</div>
+        <div class="card-subtitle">Incrémenter un entier sans risque de race condition</div>
+      </div>
+    </div>
+    <p>Objectif : découvrir <code>INCR</code>, opération atomique qui lit ET incrémente en une seule commande — parfait pour des compteurs de vues ou de visites.</p>
+    <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+    <div class="code-body">
+<span class="c"># Créer le compteur (la clé n'a pas besoin d'exister au préalable)</span><br>
+INCR <span class="r">vues:produit:p-run-001</span><br>
+INCR <span class="r">vues:produit:p-run-001</span><br>
+INCR <span class="r">vues:produit:p-run-001</span><br><br>
+<span class="c"># Lire le compteur</span><br>
+GET <span class="r">vues:produit:p-run-001</span><br><br>
+<span class="c"># Incrémenter de 5 d'un coup</span><br>
+INCRBY <span class="r">vues:produit:p-run-001</span> <span class="n">5</span><br><br>
+<span class="c"># Résultat attendu : "8"</span>
+    </div></div>
+    <div class="box-info"><strong>Pourquoi atomique ?</strong> Si deux requêtes HTTP arrivent en même temps et font <code>GET</code> + <code>SET</code>, l'une peut écraser l'autre. <code>INCR</code> est une opération unique : Redis garantit qu'aucune autre commande ne s'intercale entre la lecture et l'écriture.</div>
+  </div>
+
+  <!-- EXO 4 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon green">4️⃣</div>
+      <div>
+        <div class="card-title">Exo 4 — Espaces de noms et KEYS</div>
+        <div class="card-subtitle">Organiser ses clés avec des préfixes</div>
+      </div>
+    </div>
+    <p>Objectif : pratiquer la convention de nommage <code>préfixe:identifiant</code> et explorer les clés avec des patterns.</p>
+    <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+    <div class="code-body">
+<span class="c"># Créer 4 clés dans deux espaces de noms distincts</span><br>
+SET <span class="r">user:1:name</span>   <span class="s">"Alice"</span><br>
+SET <span class="r">user:2:name</span>   <span class="s">"Bob"</span><br>
+SET <span class="r">cart:user-1</span>   <span class="s">'{"items":[]}'</span> EX <span class="n">86400</span><br>
+SET <span class="r">cart:user-2</span>   <span class="s">'{"items":[]}'</span> EX <span class="n">86400</span><br><br>
+<span class="c"># Lister uniquement les clés utilisateurs</span><br>
+KEYS <span class="r">user:*</span><br><br>
+<span class="c"># Lister uniquement les paniers</span><br>
+KEYS <span class="r">cart:*</span><br><br>
+<span class="c"># Compter le nombre total de clés</span><br>
+DBSIZE
+    </div></div>
+    <div class="result-panel">
+<span class="ok">KEYS user:*</span><br>
+<span class="num">1)</span> <span class="key">"user:1:name"</span><br>
+<span class="num">2)</span> <span class="key">"user:2:name"</span>
+    </div>
+    <div class="box-warning"><strong>Rappel :</strong> <code>KEYS *</code> est pratique en dev mais bloque Redis en production. Utilisez <code>SCAN</code> dès que le dataset dépasse quelques milliers de clés.</div>
+  </div>
+
+  <!-- EXO 5 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon purple">5️⃣</div>
+      <div>
+        <div class="card-title">Exo 5 — Hash : profil utilisateur</div>
+        <div class="card-subtitle">Stocker un objet avec des champs accessibles séparément</div>
+      </div>
+    </div>
+    <p>Objectif : utiliser le type Hash pour modéliser un profil, et comparer avec l'approche String JSON.</p>
+    <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+    <div class="code-body">
+<span class="c"># Créer un profil avec plusieurs champs en une commande</span><br>
+HSET <span class="r">user:42</span> <span class="p">name</span> <span class="s">"Alice"</span> <span class="p">email</span> <span class="s">"alice@sport.fr"</span> <span class="p">city</span> <span class="s">"Paris"</span><br><br>
+<span class="c"># Lire un seul champ (sans tout désérialiser)</span><br>
+HGET <span class="r">user:42</span> <span class="p">name</span><br><br>
+<span class="c"># Lire tous les champs</span><br>
+HGETALL <span class="r">user:42</span><br><br>
+<span class="c"># Mettre à jour un seul champ</span><br>
+HSET <span class="r">user:42</span> <span class="p">city</span> <span class="s">"Lyon"</span><br><br>
+<span class="c"># Vérifier le nombre de champs</span><br>
+HLEN <span class="r">user:42</span>
+    </div></div>
+    <div class="result-panel">
+<span class="ok">HGETALL user:42</span><br>
+<span class="num">1)</span> <span class="key">"name"</span><br>
+<span class="num">2)</span> <span class="val">"Alice"</span><br>
+<span class="num">3)</span> <span class="key">"email"</span><br>
+<span class="num">4)</span> <span class="val">"alice@sport.fr"</span><br>
+<span class="num">5)</span> <span class="key">"city"</span><br>
+<span class="num">6)</span> <span class="val">"Lyon"</span>
+    </div>
+    <div class="box-success"><strong>Hash vs String JSON :</strong> le Hash permet de lire/modifier un seul champ sans toucher au reste. La String JSON nécessite de désérialiser, modifier, et re-sérialiser tout le document — c'est pour ça qu'on préfère le Hash pour les profils.</div>
+  </div>
+
+  <!-- EXO 6 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon cyan">6️⃣</div>
+      <div>
+        <div class="card-title">Exo 6 — List : file d'attente FIFO</div>
+        <div class="card-subtitle">Simuler une file d'e-mails à envoyer</div>
+      </div>
+    </div>
+    <p>Objectif : utiliser le type List comme file d'attente — LPUSH ajoute en tête, RPOP retire en queue (ordre FIFO).</p>
+    <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+    <div class="code-body">
+<span class="c"># Ajouter 3 e-mails à envoyer (LPUSH : ajout en tête de liste)</span><br>
+LPUSH <span class="r">queue:emails</span> <span class="s">"email-1:bienvenue"</span><br>
+LPUSH <span class="r">queue:emails</span> <span class="s">"email-2:confirmation"</span><br>
+LPUSH <span class="r">queue:emails</span> <span class="s">"email-3:promo"</span><br><br>
+<span class="c"># Voir tous les éléments (0 -1 = du début à la fin)</span><br>
+LRANGE <span class="r">queue:emails</span> <span class="n">0</span> <span class="n">-1</span><br><br>
+<span class="c"># Connaître la taille de la file</span><br>
+LLEN <span class="r">queue:emails</span><br><br>
+<span class="c"># Consommer le 1er e-mail entré (RPOP : retire en queue = FIFO)</span><br>
+RPOP <span class="r">queue:emails</span><br>
+RPOP <span class="r">queue:emails</span>
+    </div></div>
+    <div class="result-panel">
+<span class="ok">LRANGE queue:emails 0 -1</span><br>
+<span class="num">1)</span> <span class="val">"email-3:promo"</span><br>
+<span class="num">2)</span> <span class="val">"email-2:confirmation"</span><br>
+<span class="num">3)</span> <span class="val">"email-1:bienvenue"</span><br><br>
+<span class="ok">RPOP</span> → <span class="val">"email-1:bienvenue"</span>  <span style="color:var(--text-dim)">← premier entré, premier sorti</span>
+    </div>
+    <div class="box-info"><strong>Pattern worker :</strong> en prod, un process "worker" fait <code>RPOP</code> en boucle pour traiter les messages. Redis garantit qu'un message n'est consommé qu'une seule fois — même avec plusieurs workers en parallèle.</div>
+  </div>
+
+  <!-- EXO 7 (BONUS) -->
+  <div class="card" style="border-color:rgba(139,92,246,.2)">
+    <div class="card-header">
+      <div class="card-icon purple">7️⃣</div>
+      <div>
+        <div class="card-title">Exo 7 — Panier à la main (avant le TP)</div>
+        <div class="card-subtitle">Simuler exactement ce que cartService.js fera</div>
+      </div>
+    </div>
+    <p>Objectif : reproduire manuellement les opérations de <code>cartService.js</code> pour bien comprendre ce que le code fera ensuite.</p>
+    <div class="code-block"><div class="code-header"><span class="code-lang">redis cli — simulation cartService</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+    <div class="code-body">
+<span class="c"># 1. Créer un panier vide avec TTL 24h</span><br>
+SET <span class="r">cart:session-test</span> <span class="s">'{"items":[]}'</span> EX <span class="n">86400</span><br><br>
+<span class="c"># 2. Lire le panier</span><br>
+GET <span class="r">cart:session-test</span><br><br>
+<span class="c"># 3. Simuler un ajout produit (on écrase avec le JSON mis à jour)</span><br>
+SET <span class="r">cart:session-test</span> <span class="s">'{"items":[{"productId":"p-run-001","name":"Nike Pegasus","price":129.99,"quantity":1}]}'</span> EX <span class="n">86400</span><br><br>
+<span class="c"># 4. Vérifier le TTL — il doit être remis à 86400</span><br>
+TTL <span class="r">cart:session-test</span><br><br>
+<span class="c"># 5. Vider le panier = DEL (comme clearCart)</span><br>
+DEL <span class="r">cart:session-test</span><br><br>
+<span class="c"># 6. Confirmer que la clé n'existe plus</span><br>
+EXISTS <span class="r">cart:session-test</span>
+    </div></div>
+    <div class="result-panel">
+<span class="ok">TTL cart:session-test</span> → <span class="num">86400</span><br>
+<span class="ok">EXISTS cart:session-test</span> → <span class="num">0</span>  <span style="color:var(--text-dim)">← supprimée</span>
+    </div>
+    <div class="box-success"><strong>Connexion avec le TP :</strong> chaque ligne de cet exo correspond à une ligne de <code>cartService.js</code>. Quand tu coderas <code>addToCart</code> et <code>clearCart</code>, tu sauras exactement ce que Redis exécute derrière.</div>
+  </div>
+
+
+  <!-- EXO 8 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon cyan">8️⃣</div>
+      <div>
+        <div class="card-title">Exo 8 — Set : utilisateurs connectés</div>
+        <div class="card-subtitle">Collection sans doublons — un membre ne peut apparaître qu'une fois</div>
+      </div>
+    </div>
+    <p>Objectif : utiliser le type Set pour modéliser une liste d'utilisateurs connectés. Redis ignore silencieusement les doublons — pas besoin de vérifier si l'élément existe avant de l'ajouter.</p>
+    <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+    <div class="code-body">
+<span class="c"># Connecter 3 utilisateurs</span><br>
+SADD <span class="r">online:users</span> <span class="s">"alice"</span> <span class="s">"bob"</span> <span class="s">"charlie"</span><br>
+SADD <span class="r">online:users</span> <span class="s">"alice"</span>           <span class="c"># doublon → Redis répond 0 (rien ajouté)</span><br><br>
+<span class="c"># Nombre d'utilisateurs connectés</span><br>
+SCARD <span class="r">online:users</span>                   <span class="c"># → 3</span><br><br>
+<span class="c"># Vérifier si un utilisateur est connecté (1 = oui, 0 = non)</span><br>
+SISMEMBER <span class="r">online:users</span> <span class="s">"alice"</span>      <span class="c"># → 1</span><br>
+SISMEMBER <span class="r">online:users</span> <span class="s">"david"</span>      <span class="c"># → 0</span><br><br>
+<span class="c"># Lister tous les membres (ordre non garanti)</span><br>
+SMEMBERS <span class="r">online:users</span><br><br>
+<span class="c"># Déconnecter bob</span><br>
+SREM <span class="r">online:users</span> <span class="s">"bob"</span><br>
+SCARD <span class="r">online:users</span>                   <span class="c"># → 2</span>
+    </div></div>
+    <div class="result-panel">
+<span class="ok">SMEMBERS online:users</span><br>
+<span class="num">1)</span> <span class="val">"alice"</span><br>
+<span class="num">2)</span> <span class="val">"charlie"</span><br>
+<span class="num">3)</span> <span class="val">"bob"</span>  <span style="color:var(--text-dim)">← ordre non garanti dans un Set</span>
+    </div>
+    <div class="box-info"><strong>Cas d'usage réels :</strong> tags de produits (un produit ne peut avoir le même tag deux fois), système de vote (un utilisateur = un vote), liste noire d'IP. Dans SportShopy, on pourrait s'en servir pour suivre les produits déjà consultés par une session.</div>
+  </div>
+
+  <!-- EXO 9 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon green">9️⃣</div>
+      <div>
+        <div class="card-title">Exo 9 — Sorted Set : leaderboard</div>
+        <div class="card-subtitle">Ensemble ordonné par score — Redis maintient le tri automatiquement</div>
+      </div>
+    </div>
+    <p>Objectif : utiliser le Sorted Set pour un classement par score. Contrairement au Set, chaque membre a un score numérique et Redis maintient l'ordre automatiquement à chaque ajout ou modification — sans re-tri manuel.</p>
+    <div class="code-block"><div class="code-header"><span class="code-lang">redis cli</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+    <div class="code-body">
+<span class="c"># Ajouter des membres avec leur score</span><br>
+ZADD <span class="r">leaderboard</span> <span class="n">1500</span> <span class="s">"Alice"</span><br>
+ZADD <span class="r">leaderboard</span> <span class="n">2300</span> <span class="s">"Bob"</span><br>
+ZADD <span class="r">leaderboard</span> <span class="n">980</span>  <span class="s">"Charlie"</span><br><br>
+<span class="c"># Top 3 du meilleur au moins bon (REV = décroissant)</span><br>
+ZRANGE <span class="r">leaderboard</span> <span class="n">0</span> <span class="n">-1</span> WITHSCORES REV<br><br>
+<span class="c"># Score d'un membre précis</span><br>
+ZSCORE <span class="r">leaderboard</span> <span class="s">"Alice"</span>              <span class="c"># → "1500"</span><br><br>
+<span class="c"># Rang d'Alice (0-indexé, ordre croissant)</span><br>
+ZRANK <span class="r">leaderboard</span> <span class="s">"Alice"</span>               <span class="c"># → 1 (Charlie=0, Alice=1, Bob=2)</span><br><br>
+<span class="c"># Alice gagne 1000 points → score devient 2500</span><br>
+ZINCRBY <span class="r">leaderboard</span> <span class="n">1000</span> <span class="s">"Alice"</span><br>
+ZRANGE  <span class="r">leaderboard</span> <span class="n">0</span> <span class="n">-1</span> WITHSCORES REV  <span class="c"># classement mis à jour automatiquement</span>
+    </div></div>
+    <div class="result-panel">
+<span class="ok">ZRANGE leaderboard 0 -1 WITHSCORES REV</span>  <span style="color:var(--text-dim)">← après ZINCRBY</span><br>
+<span class="num">1)</span> <span class="val">"Alice"</span><br>
+<span class="num">2)</span> <span class="num">2500</span><br>
+<span class="num">3)</span> <span class="val">"Bob"</span><br>
+<span class="num">4)</span> <span class="num">2300</span><br>
+<span class="num">5)</span> <span class="val">"Charlie"</span><br>
+<span class="num">6)</span> <span class="num">980</span>
+    </div>
+    <div class="box-success"><strong>Pourquoi pas un simple tableau trié ?</strong> <code>ZINCRBY</code> met à jour le score <em>et</em> repositionne le membre en O(log n). Un tableau nécessiterait un re-tri complet à chaque modification. Dans SportShopy, ce type pourrait classer les produits les plus ajoutés au panier en temps réel.</div>
+  </div>
+
+
+  <h2 class="section-title">🔌 Intégrer Redis dans un projet Node.js — les 4 étapes <span class="line"></span></h2>
+  <div class="card">
+    <p>Ces exercices t'ont donné les fondations Redis. Voici comment les connecter à une application Express — c'est exactement l'architecture de SportShopy. Chaque fichier du dossier <code>server/</code> est commenté avec son étape.</p>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-line"><div class="step-num">1</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Installer ioredis</div>
+          <div class="step-desc">ioredis est préféré au package officiel "redis" : reconnexion automatique, gestion des erreurs sans bloquer le serveur, et meilleur support TypeScript.</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">npm install ioredis</div></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"><div class="step-num">2</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer le client — <code style="font-size:.8rem">server/config/redis.js</code></div>
+          <div class="step-desc">Un seul client partagé dans toute l'app. Ne jamais appeler <code>new Redis()</code> dans chaque fichier. Le <code>retryStrategy</code> permet au serveur de démarrer même si Redis n'est pas encore disponible.</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">javascript · server/config/redis.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">const</span> Redis = <span class="f">require</span>(<span class="s">'ioredis'</span>)<br><br>
+<span class="k">const</span> client = <span class="k">new</span> <span class="f">Redis</span>(process.env.<span class="p">REDIS_URL</span> || <span class="s">'redis://localhost:6379'</span>, {<br>
+&nbsp;&nbsp;<span class="p">retryStrategy</span>: (times) => Math.<span class="f">min</span>(times * <span class="n">200</span>, <span class="n">5000</span>),  <span class="c">// délai croissant, 5s max</span><br>
+&nbsp;&nbsp;<span class="p">maxRetriesPerRequest</span>: <span class="k">null</span>,  <span class="c">// commandes en attente ne timeout pas pendant une reconnexion</span><br>
+})<br><br>
+client.<span class="f">on</span>(<span class="s">'ready'</span>,        () => console.<span class="f">log</span>(<span class="s">'✅ Redis connecté'</span>))<br>
+client.<span class="f">on</span>(<span class="s">'reconnecting'</span>, () => console.<span class="f">log</span>(<span class="s">'🔄 Redis reconnexion...'</span>))<br>
+client.<span class="f">on</span>(<span class="s">'error'</span>,        (err) => console.<span class="f">error</span>(<span class="s">'❌ Redis erreur :'</span>, err.<span class="p">message</span>))<br><br>
+module.<span class="p">exports</span> = client
+          </div></div>
+          <div class="box-warning" style="margin-top:12px"><strong>Pas de <code>lazyConnect: true</code></strong> — avec cette option, il faudrait appeler <code>await client.connect()</code> manuellement. Sans elle, ioredis se connecte automatiquement dès l'import, ce qui est plus simple.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"><div class="step-num">3</div><div class="step-connector"></div></div>
+        <div class="step-content">
+          <div class="step-title">Créer le service métier — <code style="font-size:.8rem">server/services/votreService.js</code></div>
+          <div class="step-desc">Tout ce qui touche Redis est concentré dans le service. Les routes n'ont pas à connaître Redis. Toujours sérialiser en JSON car Redis ne stocke que des strings.</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">javascript · pattern get / set / del</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">const</span> redis = <span class="f">require</span>(<span class="s">'../config/redis'</span>)<br>
+<span class="k">const</span> TTL   = <span class="n">60</span> * <span class="n">60</span> * <span class="n">24</span>  <span class="c">// 24h — toujours une constante, pas un nombre brut</span><br><br>
+<span class="c">// Lire</span><br>
+<span class="k">const</span> raw = <span class="k">await</span> redis.<span class="f">get</span>(`<span class="r">prefix</span>:${id}`)   <span class="c">// null si absent ou expiré</span><br>
+<span class="k">const</span> data = raw ? <span class="f">JSON.parse</span>(raw) : <span class="k">null</span><br><br>
+<span class="c">// Écrire avec TTL (renouvelle l'expiration à chaque write)</span><br>
+<span class="k">await</span> redis.<span class="f">set</span>(`<span class="r">prefix</span>:${id}`, <span class="f">JSON.stringify</span>(data), <span class="s">'EX'</span>, TTL)<br><br>
+<span class="c">// Supprimer</span><br>
+<span class="k">await</span> redis.<span class="f">del</span>(`<span class="r">prefix</span>:${id}`)
+          </div></div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-line"><div class="step-num">4</div></div>
+        <div class="step-content">
+          <div class="step-title">Déclencher la connexion au démarrage — <code style="font-size:.8rem">server/server.js</code></div>
+          <div class="step-desc">Un simple <code>require()</code> suffit — ioredis se connecte dès l'import, en arrière-plan. Pas de <code>await</code> ni de <code>.connect()</code>. Le serveur démarre immédiatement et Redis se connecte en parallèle.</div>
+          <div class="code-block"><div class="code-header"><span class="code-lang">javascript · server/server.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="c">// Déclenche la connexion Redis dès le démarrage — pas de await</span><br>
+<span class="f">require</span>(<span class="s">'./config/redis'</span>)<br><br>
+<span class="k">async function</span> <span class="f">start</span>() {<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">connectDB</span>()    <span class="c">// MongoDB est bloquant — on attend</span><br>
+&nbsp;&nbsp;app.<span class="f">listen</span>(PORT, ...) <span class="c">// Redis lui se connecte en parallèle</span><br>
+}
+          </div></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="box-success"><strong>Dans SportShopy :</strong> <code>config/redis.js</code> · <code>services/cartService.js</code> · <code>routes/cart.js</code> · <code>server.js</code>. Chaque fichier est commenté avec son numéro d'étape — ouvre-les pour voir le détail complet.</div>
+  </div>
+
 </div><!-- /tab-prise-en-main -->
 
 <!-- ════════════════════════════ TP SPORTSHOPY ═══════════════════════ -->
@@ -494,24 +1245,764 @@ GET <span class="r">cart:&lt;ton-session-id&gt;</span><br><br>
     <div class="git-branch">⎇ feature/redis</div>
   </div>
 
-  <h2 class="section-title">Étape 1 — Démarrer Redis <span class="line"></span></h2>
-  <div class="card">
-    <div class="card-header"><div class="card-icon red">🐳</div><div><div class="card-title">Docker Compose</div></div></div>
-    <div class="code-block">
-      <div class="code-header"><span class="code-lang">bash · racine du projet</span><div class="code-dots"><span></span><span></span><span></span></div></div>
-      <div class="code-body">
+  <div class="card" style="margin-bottom:8px">
+    <p style="margin:0">Ce TP crée ou modifie <strong>15 fichiers</strong> répartis en 8 étapes. Chaque fichier est présenté dans un menu dépliable — clique sur son nom pour voir le code complet et les explications.</p>
+    <div class="mini-cards" style="margin-top:16px">
+      <div class="mini-card"><span class="icon">🆕</span><div><strong>9 fichiers créés</strong><span style="font-size:.78rem;color:var(--text-dim)">De zéro</span></div></div>
+      <div class="mini-card"><span class="icon">✏️</span><div><strong>6 fichiers modifiés</strong><span style="font-size:.78rem;color:var(--text-dim)">Existaient déjà</span></div></div>
+    </div>
+  </div>
+
+  <div class="section-label">🖥️ côté serveur</div>
+
+  <h2 class="section-title">Étape 1 — Infrastructure Docker <span class="line"></span></h2>
+  <p>Le fichier <code>docker-compose.yml</code> contient déjà le bloc Redis commenté. Il faut le décommenter puis lancer les conteneurs.</p>
+
+  <div class="accordion-wrap">
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">docker-compose.yml</span>
+        <span class="accordion-badge modifie">MODIFIÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Décommenter le bloc Redis dans le fichier existant. Les deux services Docker à activer :</p>
+        <ul class="checklist" style="margin-bottom:16px">
+          <li><strong>redis</strong> — le moteur Redis sur le port 6379</li>
+          <li><strong>redis-commander</strong> — l'UI web sur le port 8081 pour visualiser les données</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">yaml · docker-compose.yml (bloc à décommenter)</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="p">redis</span>:<br>
+&nbsp;&nbsp;<span class="p">image</span>: <span class="s">redis:7-alpine</span>                    <span class="c"># image officielle, Alpine = légère</span><br>
+&nbsp;&nbsp;<span class="p">container_name</span>: <span class="s">sportshopy-redis</span>          <span class="c"># nom utilisé par docker exec</span><br>
+&nbsp;&nbsp;<span class="p">ports</span>: [<span class="s">'6379:6379'</span>]                      <span class="c"># hôte:conteneur</span><br>
+&nbsp;&nbsp;<span class="p">volumes</span>: [<span class="s">'redis_data:/data'</span>]              <span class="c"># données persistées après docker down</span><br>
+&nbsp;&nbsp;<span class="p">command</span>: <span class="s">redis-server --appendonly yes</span>   <span class="c"># persistance AOF activée</span><br><br>
+<span class="p">redis-commander</span>:<br>
+&nbsp;&nbsp;<span class="p">image</span>: <span class="s">rediscommander/redis-commander:latest</span><br>
+&nbsp;&nbsp;<span class="p">environment</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="r">REDIS_HOSTS</span>=<span class="s">local:redis:6379</span>           <span class="c"># "redis" = nom du service, pas localhost</span><br>
+&nbsp;&nbsp;<span class="p">ports</span>: [<span class="s">'8081:8081'</span>]<br>
+&nbsp;&nbsp;<span class="p">depends_on</span>: [<span class="s">redis</span>]
+          </div>
+        </div>
+        <div class="code-block" style="margin-top:8px">
+          <div class="code-header"><span class="code-lang">bash · racine du projet</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
 docker compose up redis redis-commander -d<br><br>
-<span class="c"># Vérifier</span><br>
-docker exec -it sportshopy-redis redis-cli ping<br>
-<span class="c"># → PONG</span>
+<span class="c"># Vérifier que Redis répond</span><br>
+docker exec -it sportshopy-redis redis-cli ping  <span class="c"># → PONG</span>
+          </div>
+        </div>
+        <div class="box-success" style="margin-top:12px"><strong>Vérification :</strong> ouvre <code>http://localhost:8081</code> — tu dois voir l'interface Redis Commander. Aucune clé pour l'instant, c'est normal.</div>
       </div>
     </div>
-    <p>Assure-toi que <code>REDIS_URL=redis://localhost:6379</code> est dans <code>server/.env</code>.</p>
+  </div>
+
+  <h2 class="section-title">Étape 2 — Connexion Redis dans Node.js <span class="line"></span></h2>
+  <p>Deux fichiers à créer ou modifier pour brancher Redis au serveur Express.</p>
+
+  <div class="accordion-wrap">
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">server/config/redis.js</span>
+        <span class="accordion-badge cree">CRÉÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Ce fichier crée <strong>un seul client ioredis</strong> partagé dans toute l'application. Commence par installer la librairie :</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">bash</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">cd server && npm install ioredis</div>
+        </div>
+        <div class="code-block" style="margin-top:8px">
+          <div class="code-header"><span class="code-lang">javascript · server/config/redis.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">const</span> Redis = <span class="f">require</span>(<span class="s">'ioredis'</span>)<br><br>
+<span class="c">// L'URL vient de .env en prod, sinon localhost par défaut</span><br>
+<span class="k">const</span> client = <span class="k">new</span> <span class="f">Redis</span>(process.env.<span class="p">REDIS_URL</span> || <span class="s">'redis://localhost:6379'</span>, {<br>
+&nbsp;&nbsp;<span class="c">// Réessaie automatiquement si Redis n'est pas encore disponible au démarrage</span><br>
+&nbsp;&nbsp;<span class="p">retryStrategy</span>: (times) => Math.<span class="f">min</span>(times * <span class="n">200</span>, <span class="n">5000</span>),<br>
+&nbsp;&nbsp;<span class="c">// Les commandes en attente ne timeout pas pendant une reconnexion</span><br>
+&nbsp;&nbsp;<span class="p">maxRetriesPerRequest</span>: <span class="k">null</span>,<br>
+})<br><br>
+client.<span class="f">on</span>(<span class="s">'ready'</span>,        () => console.<span class="f">log</span>(<span class="s">'✅ Redis connecté'</span>))<br>
+client.<span class="f">on</span>(<span class="s">'reconnecting'</span>, () => console.<span class="f">log</span>(<span class="s">'🔄 Redis reconnexion...'</span>))<br>
+client.<span class="f">on</span>(<span class="s">'error'</span>, (err) => {<br>
+&nbsp;&nbsp;<span class="k">if</span> (err.<span class="p">code</span> === <span class="s">'ECONNREFUSED'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">warn</span>(<span class="s">'⚠️  Redis indisponible — le panier sera désactivé jusqu\'à la connexion'</span>)<br>
+&nbsp;&nbsp;} <span class="k">else</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">error</span>(<span class="s">'❌ Redis erreur :'</span>, err.<span class="p">message</span>)<br>
+&nbsp;&nbsp;}<br>
+})<br><br>
+module.<span class="p">exports</span> = client
+          </div>
+        </div>
+        <div class="box-warning" style="margin-top:12px"><strong>Ne jamais faire <code>new Redis()</code> dans chaque fichier</strong> — on crée un seul client ici et on l'exporte. Plusieurs clients vers le même Redis gaspillent des connexions.</div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">server/server.js</span>
+        <span class="accordion-badge modifie">MODIFIÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Ajouter une ligne pour déclencher la connexion Redis au démarrage. Le <code>require()</code> suffit — ioredis se connecte automatiquement à l'import.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">javascript · server/server.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">const</span> app    = <span class="f">require</span>(<span class="s">'./app'</span>)<br>
+<span class="k">const</span> { connectDB } = <span class="f">require</span>(<span class="s">'./config/database'</span>)<br>
+<span class="k">const</span> { PORT } = <span class="f">require</span>(<span class="s">'./config/env'</span>)<br><br>
+<span class="c">// ← AJOUT : déclenche la connexion Redis en arrière-plan dès le démarrage</span><br>
+<span class="c">// Pas de await — le serveur démarre même si Redis n'est pas encore prêt</span><br>
+<span class="f">require</span>(<span class="s">'./config/redis'</span>)<br><br>
+<span class="k">async function</span> <span class="f">start</span>() {<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">connectDB</span>()<br>
+&nbsp;&nbsp;app.<span class="f">listen</span>(PORT, () => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="f">log</span>(`🚀 SportShopy API — http://localhost:${PORT}/api/health`)<br>
+&nbsp;&nbsp;})<br>
+}<br><br>
+<span class="f">start</span>().<span class="f">catch</span>(err => {<br>
+&nbsp;&nbsp;console.<span class="f">error</span>(<span class="s">'❌ Démarrage impossible :'</span>, err.<span class="p">message</span>)<br>
+&nbsp;&nbsp;process.<span class="f">exit</span>(<span class="n">1</span>)<br>
+})
+          </div>
+        </div>
+        <div class="box-info" style="margin-top:12px"><strong>Pourquoi pas <code>await redis.connect()</code> ?</strong> ioredis sans <code>lazyConnect</code> se connecte automatiquement à la construction. Appeler <code>.connect()</code> manuellement provoquerait une erreur "already connected".</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Étape 3 — Service métier <span class="line"></span></h2>
+  <p>Toute la logique Redis est concentrée dans ce fichier. Les routes ne touchent jamais Redis directement.</p>
+
+  <div class="accordion-wrap">
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">server/services/cartService.js</span>
+        <span class="accordion-badge cree">CRÉÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Ce service implémente toutes les opérations CRUD sur le panier. Clé Redis : <code>cart:{sessionId}</code> → valeur JSON String avec TTL 24h renouvelé à chaque écriture.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">javascript · server/services/cartService.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">const</span> redis = <span class="f">require</span>(<span class="s">'../config/redis'</span>)<br><br>
+<span class="c">// Constante TTL — une seule modification pour changer la durée de vie du panier</span><br>
+<span class="k">const</span> TTL = <span class="n">60</span> * <span class="n">60</span> * <span class="n">24</span>  <span class="c">// 86400 secondes = 24h</span><br><br>
+<span class="c">// Convention : namespace:identifiant — "cart:" isole les clés du panier</span><br>
+<span class="k">const</span> key = (sid) => `<span class="r">cart</span>:${sid}`<br><br>
+<span class="k">async function</span> <span class="f">getCart</span>(sessionId) {<br>
+&nbsp;&nbsp;<span class="k">const</span> raw = <span class="k">await</span> redis.<span class="f">get</span>(<span class="f">key</span>(sessionId))  <span class="c">// null si absent ou expiré</span><br>
+&nbsp;&nbsp;<span class="k">const</span> cart = raw ? <span class="f">JSON.parse</span>(raw) : { <span class="p">items</span>: [] }  <span class="c">// Redis stocke des strings</span><br>
+&nbsp;&nbsp;<span class="k">return</span> <span class="f">_withTotals</span>(cart)<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">addToCart</span>(sessionId, product, qty = <span class="n">1</span>) {<br>
+&nbsp;&nbsp;<span class="k">const</span> cart = <span class="k">await</span> <span class="f">_load</span>(sessionId)<br>
+&nbsp;&nbsp;<span class="k">const</span> existing = cart.items.<span class="f">find</span>(i => i.<span class="p">productId</span> === product.<span class="p">productId</span>)<br>
+&nbsp;&nbsp;<span class="k">if</span> (existing) existing.<span class="p">quantity</span> += qty  <span class="c">// incrémente si déjà présent</span><br>
+&nbsp;&nbsp;<span class="k">else</span> cart.items.<span class="f">push</span>({ ...product, <span class="p">quantity</span>: qty })<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">_save</span>(sessionId, cart)<br>
+&nbsp;&nbsp;<span class="k">return</span> <span class="f">_withTotals</span>(cart)<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">updateQuantity</span>(sessionId, productId, quantity) {<br>
+&nbsp;&nbsp;<span class="k">const</span> cart = <span class="k">await</span> <span class="f">_load</span>(sessionId)<br>
+&nbsp;&nbsp;<span class="k">if</span> (quantity &lt;= <span class="n">0</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cart.items = cart.items.<span class="f">filter</span>(i => i.<span class="p">productId</span> !== productId)  <span class="c">// qty=0 → suppression</span><br>
+&nbsp;&nbsp;} <span class="k">else</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> item = cart.items.<span class="f">find</span>(i => i.<span class="p">productId</span> === productId)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">if</span> (item) item.<span class="p">quantity</span> = quantity<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">_save</span>(sessionId, cart)<br>
+&nbsp;&nbsp;<span class="k">return</span> <span class="f">_withTotals</span>(cart)<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">removeFromCart</span>(sessionId, productId) {<br>
+&nbsp;&nbsp;<span class="k">const</span> cart = <span class="k">await</span> <span class="f">_load</span>(sessionId)<br>
+&nbsp;&nbsp;cart.items = cart.items.<span class="f">filter</span>(i => i.<span class="p">productId</span> !== productId)<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">_save</span>(sessionId, cart)<br>
+&nbsp;&nbsp;<span class="k">return</span> <span class="f">_withTotals</span>(cart)<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">clearCart</span>(sessionId) {<br>
+&nbsp;&nbsp;<span class="k">await</span> redis.<span class="f">del</span>(<span class="f">key</span>(sessionId))  <span class="c">// DEL supprime la clé entièrement</span><br>
+&nbsp;&nbsp;<span class="k">return</span> { <span class="p">items</span>: [], <span class="p">total</span>: <span class="n">0</span>, <span class="p">count</span>: <span class="n">0</span> }<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">getCartSummary</span>(sessionId) {<br>
+&nbsp;&nbsp;<span class="k">const</span> raw = <span class="k">await</span> redis.<span class="f">get</span>(<span class="f">key</span>(sessionId))<br>
+&nbsp;&nbsp;<span class="k">if</span> (!raw) <span class="k">return</span> { <span class="p">count</span>: <span class="n">0</span>, <span class="p">total</span>: <span class="n">0</span> }<br>
+&nbsp;&nbsp;<span class="k">const</span> cart = <span class="f">JSON.parse</span>(raw)<br>
+&nbsp;&nbsp;<span class="k">return</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">count</span>: cart.items.<span class="f">reduce</span>((s, i) => s + i.<span class="p">quantity</span>, <span class="n">0</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">total</span>: +cart.items.<span class="f">reduce</span>((s, i) => s + i.<span class="p">price</span> * i.<span class="p">quantity</span>, <span class="n">0</span>).<span class="f">toFixed</span>(<span class="n">2</span>),<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+<span class="c">// ── Fonctions privées (préfixe _ = usage interne uniquement) ──────────</span><br><br>
+<span class="k">async function</span> <span class="f">_load</span>(sessionId) {<br>
+&nbsp;&nbsp;<span class="k">const</span> raw = <span class="k">await</span> redis.<span class="f">get</span>(<span class="f">key</span>(sessionId))<br>
+&nbsp;&nbsp;<span class="k">return</span> raw ? <span class="f">JSON.parse</span>(raw) : { <span class="p">items</span>: [] }<br>
+}<br><br>
+<span class="k">async function</span> <span class="f">_save</span>(sessionId, cart) {<br>
+&nbsp;&nbsp;<span class="c">// 'EX' + TTL : renouvelle le TTL à chaque écriture (sliding window 24h)</span><br>
+&nbsp;&nbsp;<span class="k">await</span> redis.<span class="f">set</span>(<span class="f">key</span>(sessionId), <span class="f">JSON.stringify</span>(cart), <span class="s">'EX'</span>, TTL)<br>
+}<br><br>
+<span class="c">// count et total calculés à la volée — pas stockés pour éviter les désynchronisations</span><br>
+<span class="k">function</span> <span class="f">_withTotals</span>(cart) {<br>
+&nbsp;&nbsp;<span class="k">return</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">items</span>: cart.items,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">count</span>: cart.items.<span class="f">reduce</span>((s, i) => s + i.<span class="p">quantity</span>, <span class="n">0</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">total</span>: +cart.items.<span class="f">reduce</span>((s, i) => s + i.<span class="p">price</span> * i.<span class="p">quantity</span>, <span class="n">0</span>).<span class="f">toFixed</span>(<span class="n">2</span>),<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+module.<span class="p">exports</span> = { getCart, addToCart, updateQuantity, removeFromCart, clearCart, getCartSummary }
+          </div>
+        </div>
+        <div class="box-redis" style="margin-top:12px"><strong>Pourquoi JSON String et non Hash Redis ?</strong> Le panier est toujours lu/écrit en entier — un seul <code>GET</code> suffit. Un Hash nécessiterait plusieurs <code>HGET</code>. La String JSON est plus simple ici.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Étape 4 — Routes REST &amp; enregistrement <span class="line"></span></h2>
+  <p>Créer les endpoints HTTP et les brancher dans Express.</p>
+
+  <div class="accordion-wrap">
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">server/routes/cart.js</span>
+        <span class="accordion-badge cree">CRÉÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>6 endpoints REST. Un middleware extrait le <code>sessionId</code> du header <code>x-session-id</code> avant chaque route — les routes elles-mêmes ne font qu'appeler le service.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">javascript · server/routes/cart.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">const</span> express     = <span class="f">require</span>(<span class="s">'express'</span>)<br>
+<span class="k">const</span> cartService = <span class="f">require</span>(<span class="s">'../services/cartService'</span>)<br>
+<span class="k">const</span> router = express.<span class="f">Router</span>()<br><br>
+<span class="c">// Middleware : extrait x-session-id et l'attache à req.sessionId</span><br>
+<span class="c">// Pourquoi un header et pas un cookie ? Plus simple à tester, pas de problème CORS</span><br>
+router.<span class="f">use</span>((req, res, next) => {<br>
+&nbsp;&nbsp;<span class="k">const</span> sid = req.headers[<span class="s">'x-session-id'</span>]<br>
+&nbsp;&nbsp;<span class="k">if</span> (!sid) <span class="k">return</span> res.<span class="f">status</span>(<span class="n">400</span>).<span class="f">json</span>({ <span class="p">success</span>: <span class="k">false</span>, <span class="p">error</span>: <span class="s">'Header x-session-id manquant'</span> })<br>
+&nbsp;&nbsp;req.<span class="p">sessionId</span> = sid<br>
+&nbsp;&nbsp;<span class="f">next</span>()<br>
+})<br><br>
+<span class="c">// GET /api/cart — panier complet { items, count, total }</span><br>
+router.<span class="f">get</span>(<span class="s">'/'</span>, <span class="k">async</span> (req, res, next) => {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> cart = <span class="k">await</span> cartService.<span class="f">getCart</span>(req.<span class="p">sessionId</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ <span class="p">success</span>: <span class="k">true</span>, <span class="p">data</span>: cart })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+<span class="c">// GET /api/cart/summary — léger, juste count + total pour le badge</span><br>
+router.<span class="f">get</span>(<span class="s">'/summary'</span>, <span class="k">async</span> (req, res, next) => {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> summary = <span class="k">await</span> cartService.<span class="f">getCartSummary</span>(req.<span class="p">sessionId</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ <span class="p">success</span>: <span class="k">true</span>, <span class="p">data</span>: summary })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+<span class="c">// POST /api/cart/items — body: { productId, name, price, image, quantity? }</span><br>
+router.<span class="f">post</span>(<span class="s">'/items'</span>, <span class="k">async</span> (req, res, next) => {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> { productId, name, price, image, quantity = <span class="n">1</span> } = req.<span class="p">body</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">if</span> (!productId || !name || price == <span class="k">null</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">return</span> res.<span class="f">status</span>(<span class="n">400</span>).<span class="f">json</span>({ <span class="p">success</span>: <span class="k">false</span>, <span class="p">error</span>: <span class="s">'productId, name et price sont requis'</span> })<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> cart = <span class="k">await</span> cartService.<span class="f">addToCart</span>(req.<span class="p">sessionId</span>, { productId, name, price, image }, quantity)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ <span class="p">success</span>: <span class="k">true</span>, <span class="p">data</span>: cart })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+<span class="c">// PUT /api/cart/items/:productId — body: { quantity } — quantity=0 = suppression</span><br>
+router.<span class="f">put</span>(<span class="s">'/items/:productId'</span>, <span class="k">async</span> (req, res, next) => {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> { quantity } = req.<span class="p">body</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">if</span> (quantity == <span class="k">null</span>) <span class="k">return</span> res.<span class="f">status</span>(<span class="n">400</span>).<span class="f">json</span>({ <span class="p">success</span>: <span class="k">false</span>, <span class="p">error</span>: <span class="s">'quantity requis'</span> })<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> cart = <span class="k">await</span> cartService.<span class="f">updateQuantity</span>(req.<span class="p">sessionId</span>, req.params.<span class="p">productId</span>, quantity)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ <span class="p">success</span>: <span class="k">true</span>, <span class="p">data</span>: cart })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+<span class="c">// DELETE /api/cart/items/:productId — supprimer un produit</span><br>
+router.<span class="f">delete</span>(<span class="s">'/items/:productId'</span>, <span class="k">async</span> (req, res, next) => {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> cart = <span class="k">await</span> cartService.<span class="f">removeFromCart</span>(req.<span class="p">sessionId</span>, req.params.<span class="p">productId</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ <span class="p">success</span>: <span class="k">true</span>, <span class="p">data</span>: cart })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+<span class="c">// DELETE /api/cart — vider le panier (DEL la clé Redis)</span><br>
+router.<span class="f">delete</span>(<span class="s">'/'</span>, <span class="k">async</span> (req, res, next) => {<br>
+&nbsp;&nbsp;<span class="k">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">const</span> cart = <span class="k">await</span> cartService.<span class="f">clearCart</span>(req.<span class="p">sessionId</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;res.<span class="f">json</span>({ <span class="p">success</span>: <span class="k">true</span>, <span class="p">data</span>: cart })<br>
+&nbsp;&nbsp;} <span class="k">catch</span> (err) { <span class="f">next</span>(err) }<br>
+})<br><br>
+module.<span class="p">exports</span> = router
+          </div>
+        </div>
+        <div class="code-block" style="margin-top:8px">
+          <div class="code-header"><span class="code-lang">bash · tester avec curl</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+curl -X POST http://localhost:3001/api/cart/items \<br>
+&nbsp;&nbsp;-H <span class="s">"x-session-id: test-session-1"</span> \<br>
+&nbsp;&nbsp;-H <span class="s">"Content-Type: application/json"</span> \<br>
+&nbsp;&nbsp;-d <span class="s">'{"productId":"p-run-001","name":"Nike Pegasus","price":129.99}'</span><br><br>
+curl -H <span class="s">"x-session-id: test-session-1"</span> http://localhost:3001/api/cart/summary
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">server/app.js</span>
+        <span class="accordion-badge modifie">MODIFIÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Deux ajouts : enregistrer la route <code>/api/cart</code> et mettre à jour le health check pour exposer l'état de Redis.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">javascript · server/app.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">const</span> express = <span class="f">require</span>(<span class="s">'express'</span>)<br>
+<span class="k">const</span> cors    = <span class="f">require</span>(<span class="s">'cors'</span>)<br>
+<span class="k">const</span> path    = <span class="f">require</span>(<span class="s">'path'</span>)<br>
+<span class="k">const</span> errorHandler = <span class="f">require</span>(<span class="s">'./middleware/errorHandler'</span>)<br>
+<span class="k">const</span> app = <span class="f">express</span>()<br><br>
+app.<span class="f">use</span>(<span class="f">cors</span>({ <span class="p">origin</span>: <span class="s">'http://localhost:5173'</span>, <span class="p">credentials</span>: <span class="k">true</span> }))<br>
+app.<span class="f">use</span>(express.<span class="f">json</span>())<br>
+app.<span class="f">use</span>(<span class="s">'/img'</span>, express.<span class="f">static</span>(path.<span class="f">join</span>(__dirname, <span class="s">'../img'</span>)))<br><br>
+<span class="c">// Health check — ← MODIFIÉ : ajout du statut Redis</span><br>
+<span class="c">// redis.status : 'ready' | 'connecting' | 'reconnecting' | 'end' (géré par ioredis)</span><br>
+app.<span class="f">get</span>(<span class="s">'/api/health'</span>, <span class="k">async</span> (req, res) => {<br>
+&nbsp;&nbsp;<span class="k">const</span> mongoose = <span class="f">require</span>(<span class="s">'mongoose'</span>)<br>
+&nbsp;&nbsp;<span class="k">const</span> redis    = <span class="f">require</span>(<span class="s">'./config/redis'</span>)<br>
+&nbsp;&nbsp;res.<span class="f">json</span>({ <span class="p">success</span>: <span class="k">true</span>, <span class="p">data</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">status</span>: <span class="s">'ok'</span>, <span class="p">phase</span>: <span class="s">'redis'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">mongo</span>: mongoose.connection.<span class="p">readyState</span> === <span class="n">1</span> ? <span class="s">'connecté'</span> : <span class="s">'déconnecté'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="p">redis</span>: redis.<span class="p">status</span> === <span class="s">'ready'</span> ? <span class="s">'connecté'</span> : redis.<span class="p">status</span>,<br>
+&nbsp;&nbsp;}})<br>
+})<br><br>
+app.<span class="f">use</span>(<span class="s">'/api/products'</span>, <span class="f">require</span>(<span class="s">'./routes/products'</span>))<br>
+<span class="c">// ← AJOUT : enregistrer la route panier</span><br>
+app.<span class="f">use</span>(<span class="s">'/api/cart'</span>,     <span class="f">require</span>(<span class="s">'./routes/cart'</span>))<br><br>
+app.<span class="f">use</span>((req, res) => res.<span class="f">status</span>(<span class="n">404</span>).<span class="f">json</span>({ <span class="p">success</span>: <span class="k">false</span>, <span class="p">error</span>: `Route introuvable : ${req.<span class="p">method</span>} ${req.<span class="p">path</span>}` }))<br>
+app.<span class="f">use</span>(errorHandler)<br>
+module.<span class="p">exports</span> = app
+          </div>
+        </div>
+        <div class="box-success" style="margin-top:12px">Vérifie le résultat : <code>curl http://localhost:3001/api/health</code> doit retourner <code>"redis": "connecté"</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:36px">⚛️ côté client</div>
+
+  <h2 class="section-title">Étape 5 — SessionId &amp; appels API <span class="line"></span></h2>
+  <p>Le client identifie l'utilisateur avec un UUID stocké dans <code>localStorage</code>, envoyé dans chaque requête.</p>
+
+  <div class="accordion-wrap">
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/utils/helpers.js</span>
+        <span class="accordion-badge cree">CRÉÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Génère un UUID unique par navigateur et le persiste dans <code>localStorage</code>. C'est la clé Redis côté client — elle identifie le panier de cet utilisateur.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">javascript · client/src/utils/helpers.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">export function</span> <span class="f">getSessionId</span>() {<br>
+&nbsp;&nbsp;<span class="k">let</span> sid = localStorage.<span class="f">getItem</span>(<span class="s">'sportshopy_session'</span>)<br>
+&nbsp;&nbsp;<span class="k">if</span> (!sid) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// crypto.randomUUID() = UUID v4 natif — pas de librairie nécessaire</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;sid = crypto.<span class="f">randomUUID</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;localStorage.<span class="f">setItem</span>(<span class="s">'sportshopy_session'</span>, sid)<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="k">return</span> sid  <span class="c">// ex: "a1b2c3d4-e5f6-..."</span><br>
+}
+          </div>
+        </div>
+        <div class="box-info" style="margin-top:12px"><strong>Chaque onglet de navigateur partage le même localStorage</strong> — donc le même panier. Ouvrir une navigation privée crée un nouveau sessionId et donc un panier vide.</div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/services/cartService.js</span>
+        <span class="accordion-badge cree">CRÉÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Toutes les fonctions qui appellent l'API REST du panier. Le sessionId est injecté dans chaque requête via le header <code>x-session-id</code>.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">javascript · client/src/services/cartService.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">import</span> { getSessionId } <span class="k">from</span> <span class="s">'../utils/helpers'</span><br><br>
+<span class="k">const</span> BASE    = <span class="s">'/api/cart'</span><br>
+<span class="c">// headers() est une fonction car getSessionId() doit être appelé à chaque requête</span><br>
+<span class="k">const</span> headers = () => ({<br>
+&nbsp;&nbsp;<span class="s">'Content-Type'</span>:  <span class="s">'application/json'</span>,<br>
+&nbsp;&nbsp;<span class="s">'x-session-id'</span>: <span class="f">getSessionId</span>(),<br>
+})<br><br>
+<span class="k">async function</span> <span class="f">_json</span>(res) {<br>
+&nbsp;&nbsp;<span class="k">const</span> data = <span class="k">await</span> res.<span class="f">json</span>()<br>
+&nbsp;&nbsp;<span class="k">if</span> (!data.<span class="p">success</span>) <span class="k">throw new</span> <span class="f">Error</span>(data.<span class="p">error</span>)<br>
+&nbsp;&nbsp;<span class="k">return</span> data.<span class="p">data</span><br>
+}<br><br>
+<span class="k">export const</span> getCart        = ()                  => <span class="f">fetch</span>(BASE,                         { <span class="p">headers</span>: <span class="f">headers</span>() }).<span class="f">then</span>(_json)<br>
+<span class="k">export const</span> getCartSummary = ()                  => <span class="f">fetch</span>(`${BASE}/summary`,            { <span class="p">headers</span>: <span class="f">headers</span>() }).<span class="f">then</span>(_json)<br>
+<span class="k">export const</span> addToCart      = (product, qty = <span class="n">1</span>)  => <span class="f">fetch</span>(`${BASE}/items`,              { <span class="p">method</span>: <span class="s">'POST'</span>,   <span class="p">headers</span>: <span class="f">headers</span>(), <span class="p">body</span>: <span class="f">JSON.stringify</span>({ ...product, <span class="p">quantity</span>: qty }) }).<span class="f">then</span>(_json)<br>
+<span class="k">export const</span> updateQuantity = (productId, qty)    => <span class="f">fetch</span>(`${BASE}/items/${productId}`, { <span class="p">method</span>: <span class="s">'PUT'</span>,    <span class="p">headers</span>: <span class="f">headers</span>(), <span class="p">body</span>: <span class="f">JSON.stringify</span>({ <span class="p">quantity</span>: qty }) }).<span class="f">then</span>(_json)<br>
+<span class="k">export const</span> removeFromCart = (productId)         => <span class="f">fetch</span>(`${BASE}/items/${productId}`, { <span class="p">method</span>: <span class="s">'DELETE'</span>, <span class="p">headers</span>: <span class="f">headers</span>() }).<span class="f">then</span>(_json)<br>
+<span class="k">export const</span> clearCart      = ()                  => <span class="f">fetch</span>(BASE,                         { <span class="p">method</span>: <span class="s">'DELETE'</span>, <span class="p">headers</span>: <span class="f">headers</span>() }).<span class="f">then</span>(_json)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Étape 6 — État global React <span class="line"></span></h2>
+  <p>Le panier est partagé dans toute l'app via un Context React — tous les composants y accèdent sans prop drilling.</p>
+
+  <div class="accordion-wrap">
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/context/CartContext.jsx</span>
+        <span class="accordion-badge cree">CRÉÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Context + Reducer pour gérer l'état du panier. Au premier rendu, charge le panier depuis Redis via l'API.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">jsx · client/src/context/CartContext.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">import</span> { createContext, useContext, useEffect, useReducer } <span class="k">from</span> <span class="s">'react'</span><br>
+<span class="k">import</span> * <span class="k">as</span> api <span class="k">from</span> <span class="s">'../services/cartService'</span><br><br>
+<span class="k">const</span> CartContext = <span class="f">createContext</span>(<span class="k">null</span>)<br><br>
+<span class="k">const</span> init = { <span class="p">items</span>: [], <span class="p">count</span>: <span class="n">0</span>, <span class="p">total</span>: <span class="n">0</span>, <span class="p">loading</span>: <span class="k">false</span> }<br><br>
+<span class="k">function</span> <span class="f">reducer</span>(state, action) {<br>
+&nbsp;&nbsp;<span class="k">switch</span> (action.<span class="p">type</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">case</span> <span class="s">'SET'</span>:     <span class="k">return</span> { ...state, ...action.<span class="p">cart</span>, <span class="p">loading</span>: <span class="k">false</span> }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">case</span> <span class="s">'LOADING'</span>: <span class="k">return</span> { ...state, <span class="p">loading</span>: <span class="k">true</span> }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="k">default</span>:        <span class="k">return</span> state<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+<span class="k">export function</span> <span class="f">CartProvider</span>({ children }) {<br>
+&nbsp;&nbsp;<span class="k">const</span> [cart, dispatch] = <span class="f">useReducer</span>(reducer, init)<br><br>
+&nbsp;&nbsp;<span class="c">// Charge le panier Redis au premier rendu (sessionId → clé Redis)</span><br>
+&nbsp;&nbsp;<span class="f">useEffect</span>(() => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;api.<span class="f">getCart</span>().<span class="f">then</span>(c => <span class="f">dispatch</span>({ <span class="p">type</span>: <span class="s">'SET'</span>, <span class="p">cart</span>: c })).<span class="f">catch</span>(() => {})<br>
+&nbsp;&nbsp;}, [])<br><br>
+&nbsp;&nbsp;<span class="c">// set() passe par l'API puis met à jour le state local</span><br>
+&nbsp;&nbsp;<span class="k">const</span> set = (promise) => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="f">dispatch</span>({ <span class="p">type</span>: <span class="s">'LOADING'</span> })<br>
+&nbsp;&nbsp;&nbsp;&nbsp;promise<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.<span class="f">then</span>(c => <span class="f">dispatch</span>({ <span class="p">type</span>: <span class="s">'SET'</span>, <span class="p">cart</span>: c }))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.<span class="f">catch</span>(() => <span class="f">dispatch</span>({ <span class="p">type</span>: <span class="s">'SET'</span>, <span class="p">cart</span>: cart }))<br>
+&nbsp;&nbsp;}<br><br>
+&nbsp;&nbsp;<span class="k">const</span> addToCart      = (product, qty = <span class="n">1</span>) => <span class="f">set</span>(api.<span class="f">addToCart</span>(product, qty))<br>
+&nbsp;&nbsp;<span class="k">const</span> updateQuantity = (productId, qty)    => <span class="f">set</span>(api.<span class="f">updateQuantity</span>(productId, qty))<br>
+&nbsp;&nbsp;<span class="k">const</span> removeFromCart = (productId)         => <span class="f">set</span>(api.<span class="f">removeFromCart</span>(productId))<br>
+&nbsp;&nbsp;<span class="k">const</span> clearCart      = ()                  => <span class="f">set</span>(api.<span class="f">clearCart</span>())<br><br>
+&nbsp;&nbsp;<span class="k">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;CartContext.Provider value={{ cart, addToCart, updateQuantity, removeFromCart, clearCart }}&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{children}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/CartContext.Provider&gt;<br>
+&nbsp;&nbsp;)<br>
+}<br><br>
+<span class="k">export function</span> <span class="f">useCart</span>() {<br>
+&nbsp;&nbsp;<span class="k">const</span> ctx = <span class="f">useContext</span>(CartContext)<br>
+&nbsp;&nbsp;<span class="k">if</span> (!ctx) <span class="k">throw new</span> <span class="f">Error</span>(<span class="s">'useCart must be used inside &lt;CartProvider&gt;'</span>)<br>
+&nbsp;&nbsp;<span class="k">return</span> ctx<br>
+}
+          </div>
+        </div>
+        <div class="box-success" style="margin-top:12px"><strong>Pourquoi useReducer et non useState ?</strong> Le panier a deux états interdépendants (items + loading). useReducer centralise les transitions d'état dans une seule fonction <code>reducer</code>, plus lisible qu'un setState imbriqué.</div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/main.jsx</span>
+        <span class="accordion-badge modifie">MODIFIÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Envelopper l'application avec <code>&lt;CartProvider&gt;</code> pour que tous les composants enfants aient accès au contexte panier.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">jsx · client/src/main.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">import</span> React <span class="k">from</span> <span class="s">'react'</span><br>
+<span class="k">import</span> ReactDOM <span class="k">from</span> <span class="s">'react-dom/client'</span><br>
+<span class="k">import</span> { BrowserRouter } <span class="k">from</span> <span class="s">'react-router-dom'</span><br>
+<span class="k">import</span> { CartProvider } <span class="k">from</span> <span class="s">'./context/CartContext'</span>  <span class="c">// ← AJOUT</span><br>
+<span class="k">import</span> App <span class="k">from</span> <span class="s">'./App'</span><br>
+<span class="k">import</span> <span class="s">'./index.css'</span><br><br>
+ReactDOM.<span class="f">createRoot</span>(document.<span class="f">getElementById</span>(<span class="s">'root'</span>)).<span class="f">render</span>(<br>
+&nbsp;&nbsp;&lt;React.StrictMode&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;BrowserRouter&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;CartProvider&gt;  <span class="c">{/* ← AJOUT : enveloppe toute l'app */}</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;App /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/CartProvider&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/BrowserRouter&gt;<br>
+&nbsp;&nbsp;&lt;/React.StrictMode&gt;<br>
+)
+          </div>
+        </div>
+        <div class="box-info" style="margin-top:12px"><strong>Ordre des providers :</strong> <code>CartProvider</code> est à l'intérieur de <code>BrowserRouter</code> car <code>useCart()</code> peut avoir besoin de <code>useNavigate()</code> dans le futur. Règle générale : les providers qui dépendent du routing vont à l'intérieur.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Étape 7 — Composants panier <span class="line"></span></h2>
+  <p>Trois composants à créer ou modifier pour afficher le panier dans l'interface.</p>
+
+  <div class="accordion-wrap">
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/components/cart/CartItem.jsx</span>
+        <span class="accordion-badge cree">CRÉÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Affiche un article du panier avec contrôle de quantité (+/−) et bouton de suppression. Utilise <code>useCart()</code> pour appeler les actions directement.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">jsx · client/src/components/cart/CartItem.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">import</span> { useCart } <span class="k">from</span> <span class="s">'../../context/CartContext'</span><br>
+<span class="k">import</span> { formatPrice } <span class="k">from</span> <span class="s">'../../utils/formatters'</span><br><br>
+<span class="k">export default function</span> <span class="f">CartItem</span>({ item }) {<br>
+&nbsp;&nbsp;<span class="k">const</span> { updateQuantity, removeFromCart } = <span class="f">useCart</span>()<br><br>
+&nbsp;&nbsp;<span class="k">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"flex gap-4 py-5 border-b border-hairline"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;img src={item.image} alt={item.name} className=<span class="s">"w-20 h-20 object-cover bg-soft-cloud flex-shrink-0"</span> /&gt;<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"flex flex-1 flex-col gap-1 min-w-0"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;p className=<span class="s">"font-semibold text-sm leading-tight truncate"</span>&gt;{item.name}&lt;/p&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;p className=<span class="s">"text-mute text-xs"</span>&gt;{<span class="f">formatPrice</span>(item.price)} / unité&lt;/p&gt;<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"flex items-center gap-3 mt-auto"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">{/* Contrôle quantité — quantity-1=0 déclenche la suppression côté service */}</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"flex items-center border border-hairline"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;button onClick={() =&gt; <span class="f">updateQuantity</span>(item.productId, item.quantity - <span class="n">1</span>)} className=<span class="s">"w-8 h-8 flex items-center justify-center text-mute hover:text-ink transition-colors"</span>&gt;−&lt;/button&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span className=<span class="s">"w-8 text-center text-sm font-medium"</span>&gt;{item.quantity}&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;button onClick={() =&gt; <span class="f">updateQuantity</span>(item.productId, item.quantity + <span class="n">1</span>)} className=<span class="s">"w-8 h-8 flex items-center justify-center text-mute hover:text-ink transition-colors"</span>&gt;+&lt;/button&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;button onClick={() =&gt; <span class="f">removeFromCart</span>(item.productId)} className=<span class="s">"caption text-mute hover:text-sale transition-colors ml-auto"</span>&gt;Supprimer&lt;/button&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;p className=<span class="s">"font-bold text-sm whitespace-nowrap"</span>&gt;{<span class="f">formatPrice</span>(item.price * item.quantity)}&lt;/p&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;)<br>
+}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/components/cart/CartSummary.jsx</span>
+        <span class="accordion-badge cree">CRÉÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Récapitulatif de commande avec calcul de livraison : gratuite dès 60€. Les données viennent directement de <code>useCart()</code> — jamais recalculées localement.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">jsx · client/src/components/cart/CartSummary.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">import</span> { Link } <span class="k">from</span> <span class="s">'react-router-dom'</span><br>
+<span class="k">import</span> { useCart } <span class="k">from</span> <span class="s">'../../context/CartContext'</span><br>
+<span class="k">import</span> { formatPrice } <span class="k">from</span> <span class="s">'../../utils/formatters'</span><br><br>
+<span class="k">export default function</span> <span class="f">CartSummary</span>() {<br>
+&nbsp;&nbsp;<span class="k">const</span> { cart, clearCart } = <span class="f">useCart</span>()<br>
+&nbsp;&nbsp;<span class="c">// Livraison gratuite dès 60€ ou si panier vide</span><br>
+&nbsp;&nbsp;<span class="k">const</span> shipping = cart.total &gt;= <span class="n">60</span> || cart.count === <span class="n">0</span> ? <span class="n">0</span> : <span class="n">4.99</span><br><br>
+&nbsp;&nbsp;<span class="k">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"bg-soft-cloud p-6 flex flex-col gap-4 sticky top-24"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;h2 className=<span class="s">"font-bold text-lg"</span>&gt;Récapitulatif&lt;/h2&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"flex flex-col gap-2 text-sm"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"flex justify-between"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span className=<span class="s">"text-mute"</span>&gt;Sous-total ({cart.count} article{cart.count &gt; <span class="n">1</span> ? <span class="s">'s'</span> : <span class="s">''</span>})&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span&gt;{<span class="f">formatPrice</span>(cart.total)}&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"flex justify-between"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span className=<span class="s">"text-mute"</span>&gt;Livraison&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span&gt;{shipping === <span class="n">0</span> ? &lt;span className=<span class="s">"text-green-600 font-medium"</span>&gt;Gratuite&lt;/span&gt; : <span class="f">formatPrice</span>(shipping)}&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{cart.total &gt; <span class="n">0</span> && cart.total &lt; <span class="n">60</span> && (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;p className=<span class="s">"text-xs text-mute"</span>&gt;Plus que {<span class="f">formatPrice</span>(<span class="n">60</span> - cart.total)} pour la livraison gratuite&lt;/p&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"border-t border-hairline pt-4 flex justify-between font-bold"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span&gt;Total&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span&gt;{<span class="f">formatPrice</span>(cart.total + shipping)}&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;button disabled={cart.count === <span class="n">0</span>} className={`btn-primary justify-center py-3 ${cart.count === <span class="n">0</span> ? <span class="s">'opacity-40 cursor-not-allowed'</span> : <span class="s">''</span>}`}&gt;Commander&lt;/button&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{cart.count &gt; <span class="n">0</span> && (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;button onClick={clearCart} className=<span class="s">"caption text-mute hover:text-sale text-center transition-colors"</span>&gt;Vider le panier&lt;/button&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;)<br>
+}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/components/common/Header.jsx</span>
+        <span class="accordion-badge modifie">MODIFIÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Ajout du badge compteur d'articles sur le lien "Panier". <code>useCart()</code> fournit <code>cart.count</code> en temps réel — le badge se met à jour automatiquement après chaque ajout.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">jsx · client/src/components/common/Header.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">import</span> { Link, NavLink } <span class="k">from</span> <span class="s">'react-router-dom'</span><br>
+<span class="k">import</span> { useCart } <span class="k">from</span> <span class="s">'../../context/CartContext'</span>  <span class="c">// ← AJOUT</span><br><br>
+<span class="k">const</span> NAV = [<br>
+&nbsp;&nbsp;{ <span class="p">to</span>: <span class="s">'/catalogue'</span>, <span class="p">label</span>: <span class="s">'Catalogue'</span> },<br>
+&nbsp;&nbsp;{ <span class="p">to</span>: <span class="s">'/catalogue?category=running'</span>,  <span class="p">label</span>: <span class="s">'Running'</span> },<br>
+&nbsp;&nbsp;{ <span class="p">to</span>: <span class="s">'/catalogue?category=football'</span>, <span class="p">label</span>: <span class="s">'Football'</span> },<br>
+&nbsp;&nbsp;{ <span class="p">to</span>: <span class="s">'/catalogue?category=fitness'</span>,  <span class="p">label</span>: <span class="s">'Fitness'</span> },<br>
+]<br><br>
+<span class="k">export default function</span> <span class="f">Header</span>() {<br>
+&nbsp;&nbsp;<span class="k">const</span> { cart } = <span class="f">useCart</span>()  <span class="c">// ← AJOUT : accès au panier global</span><br><br>
+&nbsp;&nbsp;<span class="k">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;header className=<span class="s">"sticky top-0 z-50 bg-canvas sticky-bar"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Link to=<span class="s">"/"</span> className=<span class="s">"font-display text-2xl tracking-wider"</span>&gt;SPORTSHOPY&lt;/Link&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;nav className=<span class="s">"hidden md:flex items-center gap-8"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{NAV.<span class="f">map</span>(({ to, label }) => (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;NavLink key={to} to={to} className={({ isActive }) =&gt; `caption transition-colors hover:text-ink ${isActive ? <span class="s">'text-ink font-semibold'</span> : <span class="s">'text-mute'</span>}`}&gt;{label}&lt;/NavLink&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;))}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/nav&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">{/* ← MODIFIÉ : ajout du badge avec cart.count */}</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Link to=<span class="s">"/panier"</span> className=<span class="s">"btn-secondary px-4 py-2 text-sm relative"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Panier<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{cart.count &gt; <span class="n">0</span> && (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span className=<span class="s">"absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-ink text-canvas text-[10px] font-bold flex items-center justify-center"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{cart.count &gt; <span class="n">99</span> ? <span class="s">'99+'</span> : cart.count}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/Link&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/header&gt;<br>
+&nbsp;&nbsp;)<br>
+}
+          </div>
+        </div>
+        <div class="box-info" style="margin-top:12px"><code>cart.count &gt; 99 ? '99+' : cart.count</code> — cap à 99 pour ne pas casser le design du badge si quelqu'un a beaucoup d'articles.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Étape 8 — Pages <span class="line"></span></h2>
+  <p>Modifier la fiche produit pour brancher le bouton "Ajouter au panier", et créer la page panier complète.</p>
+
+  <div class="accordion-wrap">
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/pages/ProductPage.jsx — ajouts Redis</span>
+        <span class="accordion-badge modifie">MODIFIÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>Ce fichier existait déjà (Phase 1). Trois ajouts pour brancher le panier :</p>
+        <ul class="checklist" style="margin-bottom:16px">
+          <li>Import de <code>useCart</code></li>
+          <li>State local <code>added</code> pour l'animation du bouton</li>
+          <li>Logique du bouton "Ajouter au panier"</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">jsx · ajouts dans ProductPage.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="c">// 1. Ajouter ces imports en haut du fichier</span><br>
+<span class="k">import</span> { useState } <span class="k">from</span> <span class="s">'react'</span>  <span class="c">// déjà présent, ajouter useState si pas encore là</span><br>
+<span class="k">import</span> { useCart } <span class="k">from</span> <span class="s">'../context/CartContext'</span>  <span class="c">// ← AJOUT</span><br><br>
+<span class="c">// 2. Dans le composant, déstructurer addToCart et ajouter le state local</span><br>
+<span class="k">const</span> { addToCart } = <span class="f">useCart</span>()              <span class="c">// ← AJOUT</span><br>
+<span class="k">const</span> [added, setAdded] = <span class="f">useState</span>(<span class="k">false</span>)    <span class="c">// ← AJOUT : animation bouton</span><br><br>
+<span class="c">// 3. Remplacer le bouton "Ajouter au panier" par cette version</span><br>
+&lt;button<br>
+&nbsp;&nbsp;disabled={product.stock === <span class="n">0</span>}<br>
+&nbsp;&nbsp;onClick={() =&gt; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">// Envoie les données produit au panier Redis via le contexte</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="f">addToCart</span>({ <span class="p">productId</span>: product.id, <span class="p">name</span>: product.name, <span class="p">price</span>: product.price, <span class="p">image</span>: product.image })<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="f">setAdded</span>(<span class="k">true</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="f">setTimeout</span>(() =&gt; <span class="f">setAdded</span>(<span class="k">false</span>), <span class="n">2000</span>)  <span class="c">// reset après 2s</span><br>
+&nbsp;&nbsp;}}<br>
+&nbsp;&nbsp;className={`btn-primary justify-center text-base py-4 mt-2 ${product.stock === <span class="n">0</span> ? <span class="s">'opacity-40 cursor-not-allowed'</span> : <span class="s">''</span>}`}&gt;<br>
+&nbsp;&nbsp;{product.stock === <span class="n">0</span> ? <span class="s">'Rupture de stock'</span> : added ? <span class="s">'✓ Ajouté !'</span> : <span class="s">'Ajouter au panier'</span>}<br>
+&lt;/button&gt;
+          </div>
+        </div>
+        <div class="box-success" style="margin-top:12px"><code>setAdded(true)</code> puis reset après 2s — feedback visuel immédiat sans bloquer l'UI. Le state <code>added</code> ne vit que dans ce composant, pas dans le contexte global.</div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-trigger" onclick="toggleAccordion(this)">
+        <span class="accordion-filepath">client/src/pages/CartPage.jsx</span>
+        <span class="accordion-badge modifie">MODIFIÉ</span>
+        <span class="accordion-arrow">▼</span>
+      </button>
+      <div class="accordion-body">
+        <p>La page panier affiche deux états : vide (avec lien vers le catalogue) ou rempli (liste des articles + récapitulatif). Toutes les données viennent de <code>useCart()</code>.</p>
+        <div class="code-block">
+          <div class="code-header"><span class="code-lang">jsx · client/src/pages/CartPage.jsx</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+          <div class="code-body">
+<span class="k">import</span> { Link } <span class="k">from</span> <span class="s">'react-router-dom'</span><br>
+<span class="k">import</span> { useCart } <span class="k">from</span> <span class="s">'../context/CartContext'</span><br>
+<span class="k">import</span> CartItem <span class="k">from</span> <span class="s">'../components/cart/CartItem'</span><br>
+<span class="k">import</span> CartSummary <span class="k">from</span> <span class="s">'../components/cart/CartSummary'</span><br><br>
+<span class="k">export default function</span> <span class="f">CartPage</span>() {<br>
+&nbsp;&nbsp;<span class="k">const</span> { cart } = <span class="f">useCart</span>()<br><br>
+&nbsp;&nbsp;<span class="k">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"max-w-7xl mx-auto px-4 sm:px-6 py-10"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;h1 className=<span class="s">"font-bold text-2xl mb-8"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mon panier<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{cart.count &gt; <span class="n">0</span> && (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;span className=<span class="s">"ml-2 text-base font-normal text-mute"</span>&gt;({cart.count} article{cart.count &gt; <span class="n">1</span> ? <span class="s">'s'</span> : <span class="s">''</span>})&lt;/span&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/h1&gt;<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">{/* État vide */}</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{cart.count === <span class="n">0</span> ? (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"text-center py-20"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;p className=<span class="s">"text-4xl mb-4"</span>&gt;🛒&lt;/p&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;p className=<span class="s">"font-semibold text-lg mb-2"</span>&gt;Votre panier est vide&lt;/p&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;p className=<span class="s">"text-mute text-sm mb-8"</span>&gt;Ajoutez des produits depuis le catalogue pour commencer.&lt;/p&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;Link to=<span class="s">"/catalogue"</span> className=<span class="s">"btn-primary"</span>&gt;Voir le catalogue&lt;/Link&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;) : (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c">{/* État rempli — grille 2/3 articles + 1/3 récapitulatif */}</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"grid grid-cols-1 lg:grid-cols-3 gap-10"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div className=<span class="s">"lg:col-span-2"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{cart.items.<span class="f">map</span>(item =&gt; (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;CartItem key={item.productId} item={item} /&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;))}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div&gt;&lt;CartSummary /&gt;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;)<br>
+}
+          </div>
+        </div>
+        <div class="box-redis" style="margin-top:12px"><strong>Rechargement de la page :</strong> le panier est rechargé depuis Redis via <code>useEffect</code> dans <code>CartProvider</code> — le contenu survit à un F5 tant que le TTL n'est pas expiré.</div>
+      </div>
+    </div>
   </div>
 
   <h2 class="section-title">Étape 2 — Client ioredis <span class="line"></span></h2>
   <div class="card">
-    <div class="card-header"><div class="card-icon red">🔌</div><div><div class="card-title">server/config/redis.js</div></div></div>
+    <div class="card-header"><div class="card-icon red">🔌</div><div><div class="card-title">server/config/redis.js</div><div class="card-subtitle">Un seul client partagé dans toute l'application</div></div></div>
     <div class="code-block">
       <div class="code-header"><span class="code-lang">bash · installer ioredis</span><div class="code-dots"><span></span><span></span><span></span></div></div>
       <div class="code-body">
@@ -523,26 +2014,32 @@ cd server && npm install ioredis
       <div class="code-body">
 <span class="k">const</span> Redis = <span class="f">require</span>(<span class="s">'ioredis'</span>)<br><br>
 <span class="k">const</span> client = <span class="k">new</span> <span class="f">Redis</span>(process.env.<span class="p">REDIS_URL</span> || <span class="s">'redis://localhost:6379'</span>, {<br>
-&nbsp;&nbsp;<span class="p">lazyConnect</span>: <span class="k">true</span>,<br>
-&nbsp;&nbsp;<span class="p">retryStrategy</span>: (times) => Math.<span class="f">min</span>(times * <span class="n">100</span>, <span class="n">3000</span>),<br>
+&nbsp;&nbsp;<span class="c">// Délai croissant entre les tentatives : 200ms, 400ms… jusqu'à 5s</span><br>
+&nbsp;&nbsp;<span class="p">retryStrategy</span>: (times) => Math.<span class="f">min</span>(times * <span class="n">200</span>, <span class="n">5000</span>),<br>
+&nbsp;&nbsp;<span class="c">// Les commandes en attente ne timeout pas pendant une reconnexion</span><br>
+&nbsp;&nbsp;<span class="p">maxRetriesPerRequest</span>: <span class="k">null</span>,<br>
 })<br><br>
-client.<span class="f">on</span>(<span class="s">'connect'</span>, () => console.<span class="f">log</span>(<span class="s">'✅ Redis connecté'</span>))<br>
-client.<span class="f">on</span>(<span class="s">'error'</span>,   (err) => console.<span class="f">error</span>(<span class="s">'❌ Redis erreur :'</span>, err.<span class="p">message</span>))<br><br>
-module.exports = client
+<span class="c">// 'ready' = Redis accepte des commandes (plus fiable que 'connect')</span><br>
+client.<span class="f">on</span>(<span class="s">'ready'</span>,        () => console.<span class="f">log</span>(<span class="s">'✅ Redis connecté'</span>))<br>
+client.<span class="f">on</span>(<span class="s">'reconnecting'</span>, () => console.<span class="f">log</span>(<span class="s">'🔄 Redis reconnexion...'</span>))<br>
+client.<span class="f">on</span>(<span class="s">'error'</span>,        (err) => console.<span class="f">error</span>(<span class="s">'❌ Redis erreur :'</span>, err.<span class="p">message</span>))<br><br>
+module.<span class="p">exports</span> = client
       </div>
     </div>
-    <p>Dans <code>server/server.js</code>, connecte Redis au démarrage :</p>
+    <div class="box-warning"><strong>Pas de <code>lazyConnect: true</code></strong> — avec cette option il faudrait appeler <code>await client.connect()</code> manuellement au démarrage. Sans elle, ioredis se connecte automatiquement dès l'import du module. Plus simple, moins de risques d'oublier l'appel.</div>
+    <p style="margin-top:20px">Dans <code>server/server.js</code>, un simple <code>require()</code> suffit à déclencher la connexion :</p>
     <div class="code-block">
-      <div class="code-header"><span class="code-lang">javascript · server/server.js (extrait)</span><div class="code-dots"><span></span><span></span><span></span></div></div>
+      <div class="code-header"><span class="code-lang">javascript · server/server.js</span><div class="code-dots"><span></span><span></span><span></span></div></div>
       <div class="code-body">
-<span class="k">const</span> redis = <span class="f">require</span>(<span class="s">'./config/redis'</span>)<br><br>
+<span class="c">// Le require() déclenche la connexion en arrière-plan — pas de await</span><br>
+<span class="f">require</span>(<span class="s">'./config/redis'</span>)<br><br>
 <span class="k">async function</span> <span class="f">start</span>() {<br>
-&nbsp;&nbsp;<span class="k">await</span> <span class="f">connectDB</span>()<br>
-&nbsp;&nbsp;<span class="k">await</span> redis.<span class="f">connect</span>()   <span class="c">// ← Redis après MongoDB</span><br>
-&nbsp;&nbsp;app.<span class="f">listen</span>(PORT, ...)<br>
+&nbsp;&nbsp;<span class="k">await</span> <span class="f">connectDB</span>()    <span class="c">// MongoDB : on attend la connexion (bloquant)</span><br>
+&nbsp;&nbsp;app.<span class="f">listen</span>(PORT, ...) <span class="c">// Redis se connecte en parallèle, sans bloquer</span><br>
 }
       </div>
     </div>
+    <div class="box-success"><strong>Vérifier que les deux services sont connectés :</strong> appelle <code>GET http://localhost:3001/api/health</code> — la réponse indique l'état de MongoDB et de Redis en temps réel.</div>
   </div>
 
   <h2 class="section-title">Étape 3 — cartService <span class="line"></span></h2>
@@ -1083,6 +2580,12 @@ function initQuiz() {
 document.querySelector('[onclick="switchTab(\'quiz\')"]').addEventListener('click', function() {
   if (!document.getElementById('quiz-container').innerHTML) initQuiz();
 });
+
+function toggleAccordion(trigger) {
+  const isOpen = trigger.classList.contains('open')
+  trigger.classList.toggle('open', !isOpen)
+  trigger.nextElementSibling.classList.toggle('open', !isOpen)
+}
 </script>
 </body>
 </html>
