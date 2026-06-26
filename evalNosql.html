@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Évaluation NoSQL — Diagnostic & Mini-application</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0b1120;
+  --bg-card: #111827;
+  --bg-elev: #1e293b;
+  --bg-mono: #0f172a;
+  --border: #1f2937;
+  --border-soft: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-soft: rgba(59, 130, 246, 0.12);
+  --secondary: #10b981;
+  --secondary-soft: rgba(16, 185, 129, 0.12);
+  --accent: #f59e0b;
+  --accent-soft: rgba(245, 158, 11, 0.14);
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --purple: #a78bfa;
+  --purple-soft: rgba(167, 139, 250, 0.14);
+  --f1: #3b82f6;
+  --f2: #10b981;
+  --f3: #f59e0b;
+  --f4: #ef4444;
+  --f5: #a78bfa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+.header {
+  background: linear-gradient(135deg, #0b1120 0%, #1e293b 50%, #1a1035 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 48px 32px 40px;
+}
+.header-inner { max-width: 1200px; margin: 0 auto; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary-soft);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 20px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.header h1 {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header .subtitle {
+  color: var(--text-muted);
+  font-size: 16px;
+  max-width: 760px;
+  margin-bottom: 28px;
+}
+.meta-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.meta-pill {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.meta-pill .label { color: var(--text-muted); }
+.meta-pill .value { color: var(--text-primary); font-weight: 600; }
+
+.tabs-wrapper {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+.tabs {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 16px 18px;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.tab:hover { color: var(--text-secondary); }
+.tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+.tab .tab-letter {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-elev);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.tab.active .tab-letter {
+  background: var(--primary);
+  color: white;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 32px; }
+.panel { display: none; }
+.panel.active { display: block; animation: fadeIn 0.4s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.project-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.project-title-block { flex: 1; min-width: 280px; }
+.project-letter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.project-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.project-sub {
+  color: var(--text-muted);
+  font-size: 15px;
+}
+.project-sub strong { color: var(--text-secondary); font-weight: 600; }
+
+.project-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tag-f1 { background: rgba(59, 130, 246, 0.14); color: var(--f1); border: 1px solid rgba(59, 130, 246, 0.3); }
+.tag-f2 { background: rgba(16, 185, 129, 0.14); color: var(--f2); border: 1px solid rgba(16, 185, 129, 0.3); }
+.tag-f3 { background: rgba(245, 158, 11, 0.14); color: var(--f3); border: 1px solid rgba(245, 158, 11, 0.3); }
+.tag-f4 { background: rgba(239, 68, 68, 0.14); color: var(--f4); border: 1px solid rgba(239, 68, 68, 0.3); }
+.tag-f5 { background: rgba(167, 139, 250, 0.14); color: var(--f5); border: 1px solid rgba(167, 139, 250, 0.3); }
+
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+.kpi {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.kpi-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.kpi-value.green { color: var(--secondary); }
+.kpi-value.amber { color: var(--accent); }
+.kpi-value.red { color: var(--danger); }
+.kpi-value.purple { color: var(--purple); }
+.kpi-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+.card-wide { grid-column: 1 / -1; }
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+.icon-bg {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.icon-blue { background: var(--primary-soft); color: var(--primary); }
+.icon-green { background: var(--secondary-soft); color: var(--secondary); }
+.icon-amber { background: var(--accent-soft); color: var(--accent); }
+.icon-red { background: var(--danger-soft); color: var(--danger); }
+.icon-purple { background: var(--purple-soft); color: var(--purple); }
+
+.card p { color: var(--text-secondary); margin-bottom: 12px; font-size: 14.5px; }
+.card p:last-child { margin-bottom: 0; }
+.card ul { list-style: none; padding: 0; }
+.card ul li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.card ul li::before {
+  content: "›";
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: 700;
+}
+.card ul li.green::before { color: var(--secondary); }
+.card ul li.amber::before { color: var(--accent); }
+.card strong { color: var(--text-primary); font-weight: 600; }
+
+.data-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.data-line:last-child { border-bottom: none; }
+.data-line .label { color: var(--text-muted); }
+.data-line .value { color: var(--text-primary); font-weight: 500; font-family: 'JetBrains Mono', monospace; }
+
+.highlight {
+  background: var(--bg-mono);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-top: 16px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+.highlight.amber { border-left-color: var(--accent); }
+.highlight.green { border-left-color: var(--secondary); }
+.highlight.red { border-left-color: var(--danger); }
+.highlight.purple { border-left-color: var(--purple); }
+
+/* Table de barème */
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-top: 4px;
+}
+.score-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+.score-table td {
+  padding: 12px 14px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.score-table tr:last-child td { border-bottom: none; }
+.score-table tr:hover td { background: rgba(255,255,255,0.02); }
+.score-table .pts {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.score-table .total td {
+  color: var(--text-primary);
+  font-weight: 700;
+  border-top: 1px solid var(--border-soft);
+}
+.score-table .total .pts { color: var(--secondary); font-size: 16px; }
+
+/* Tableau de diagnostic */
+.diag-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.diag-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-mono);
+}
+.diag-table td {
+  padding: 12px 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  font-style: italic;
+  font-size: 12px;
+}
+.diag-table .app-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.diag-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+/* Modèle NoSQL pills dans le tableau */
+.model-pill {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 2px 2px 2px 0;
+}
+.mp-doc  { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+.mp-kv   { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.mp-col  { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.mp-gph  { background: rgba(167,139,250,0.15); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.3); }
+
+/* Contraintes minimales */
+.checklist { list-style: none; padding: 0; }
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.checklist li:last-child { border-bottom: none; }
+.check-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.check-icon.blue { background: var(--primary-soft); color: var(--primary); }
+.check-icon.green { background: var(--secondary-soft); color: var(--secondary); }
+.check-icon.amber { background: var(--accent-soft); color: var(--accent); }
+
+.footer-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  gap: 16px;
+}
+.nav-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  color: var(--text-secondary);
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-family: 'Sora', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-btn:hover:not(:disabled) {
+  background: var(--bg-elev);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.intro-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+}
+.intro-block p { color: var(--text-secondary); font-size: 15px; margin-bottom: 12px; }
+.intro-block p:last-child { margin-bottom: 0; }
+.intro-block strong { color: var(--text-primary); }
+
+@media (max-width: 720px) {
+  .header { padding: 32px 20px; }
+  .header h1 { font-size: 28px; }
+  .container { padding: 24px 20px; }
+  .project-title { font-size: 24px; }
+  .tabs { padding: 0 20px; }
+  .section-grid { grid-template-columns: 1fr; }
+  .diag-table { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <span class="badge">🎓 MDS · B3 Dev Web · Évaluation NoSQL</span>
+    <h1>Diagnostic NoSQL & Mini-application</h1>
+    <p class="subtitle">Vous êtes consultants NoSQL pour une agence spécialisée dans la conception d'applications web. Votre mission : analyser 7 applications, choisir vos modèles de données, et développer un prototype fonctionnel.</p>
+    <div class="meta-pills">
+      <span class="meta-pill"><span class="label">Applications</span><span class="value">7 à analyser</span></span>
+      <span class="meta-pill"><span class="label">Univers</span><span class="value">Coupe du Monde · Pokémon</span></span>
+      <span class="meta-pill"><span class="label">Modèles</span><span class="value">Document · Clé-Valeur · Colonne · Graphe</span></span>
+      <span class="meta-pill"><span class="label">Total</span><span class="value">20 points</span></span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs-wrapper">
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="ctx"><span class="tab-letter">00</span> Contexte</button>
+    <button class="tab" data-tab="diag"><span class="tab-letter">01</span> Diagnostic</button>
+    <button class="tab" data-tab="wc1"><span class="tab-letter">WC1</span> Supporters</button>
+    <button class="tab" data-tab="wc2"><span class="tab-letter">WC2</span> Réseau joueurs</button>
+    <button class="tab" data-tab="wc3"><span class="tab-letter">WC3</span> Fan Votes</button>
+    <button class="tab" data-tab="wc4"><span class="tab-letter">WC4</span> Live Tracker</button>
+    <button class="tab" data-tab="pk1"><span class="tab-letter">PK1</span> Pokédex</button>
+    <button class="tab" data-tab="pk2"><span class="tab-letter">PK2</span> Team Builder</button>
+    <button class="tab" data-tab="pk3"><span class="tab-letter">PK3</span> Votes Pokémon</button>
+    <button class="tab" data-tab="livr"><span class="tab-letter">✓</span> Livrables</button>
+  </div>
+</nav>
+
+<main class="container">
+
+<!-- ========== 00 — CONTEXTE ========== -->
+<section class="panel active" data-panel="ctx">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">CONTEXTE GÉNÉRAL</div>
+      <h2 class="project-title">Vous êtes consultants NoSQL</h2>
+      <p class="project-sub">Une agence, deux univers, une décision d'architecture à défendre.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f1">Document</span>
+      <span class="tag tag-f2">Clé-Valeur</span>
+      <span class="tag tag-f3">Colonne</span>
+      <span class="tag tag-f5">Graphe</span>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-label">Applications</div>
+      <div class="kpi-value green">7</div>
+      <div class="kpi-sub">à analyser en groupe</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">App à développer</div>
+      <div class="kpi-value purple">1 seule</div>
+      <div class="kpi-sub">au choix parmi les 7</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Modèles min.</div>
+      <div class="kpi-value amber">2</div>
+      <div class="kpi-sub">dans l'app développée</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Évaluation</div>
+      <div class="kpi-value green">20 pts</div>
+      <div class="kpi-sub">diagnostic + dev + justification</div>
+    </div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>La mission</div>
+      <p>Vous travaillez pour une petite agence spécialisée dans la conception d'applications web. L'agence souhaite développer plusieurs prototypes autour de deux univers : la <strong>Coupe du monde de football</strong> et l'<strong>univers Pokémon</strong>.</p>
+      <p>Votre rôle ne se limite pas au développement. Vous devez d'abord agir comme une <strong>équipe de consultants NoSQL</strong> : analyser les besoins fonctionnels, identifier les types de données manipulées, puis choisir les modèles les plus adaptés.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Ce que vous devez démontrer</div>
+      <ul>
+        <li>Analyser un besoin applicatif simple</li>
+        <li>Identifier les types de données à manipuler</li>
+        <li>Choisir les modèles NoSQL les plus adaptés</li>
+        <li>Justifier vos choix techniques</li>
+        <li>Développer une mini-application avec <strong>au minimum deux modèles NoSQL</strong></li>
+        <li>Présenter clairement votre architecture</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Les 4 modèles disponibles</div>
+      <div class="data-line">
+        <span class="label"><span class="model-pill mp-doc">Document</span></span>
+        <span class="value" style="color: var(--text-muted); font-size: 12px; text-align: right;">Données principales, fiches objets métier</span>
+      </div>
+      <div class="data-line">
+        <span class="label"><span class="model-pill mp-kv">Clé-Valeur</span></span>
+        <span class="value" style="color: var(--text-muted); font-size: 12px; text-align: right;">Cache, compteur, score, session</span>
+      </div>
+      <div class="data-line">
+        <span class="label"><span class="model-pill mp-col">Colonne</span></span>
+        <span class="value" style="color: var(--text-muted); font-size: 12px; text-align: right;">Historique, logs, données horodatées</span>
+      </div>
+      <div class="data-line">
+        <span class="label"><span class="model-pill mp-gph">Graphe</span></span>
+        <span class="value" style="color: var(--text-muted); font-size: 12px; text-align: right;">Relations, recommandations, réseaux</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-purple">●</span>Organisation en deux étapes</div>
+      <ul>
+        <li><strong>Étape 1 — Diagnostic :</strong> Analyser les 7 applications et remplir le tableau comparatif</li>
+        <li><strong>Étape 2 — Développement :</strong> Choisir une application, justifier vos modèles, développer une version simple et fonctionnelle</li>
+      </ul>
+      <div class="highlight amber">⚠ Un projet simple, clair et bien justifié sera mieux évalué qu'un projet ambitieux mais mal maîtrisé.</div>
+    </div>
+  </div>
+
+  <div class="card card-wide">
+    <div class="card-title"><span class="icon-bg icon-red">▲</span>La question centrale de l'évaluation</div>
+    <div style="background: var(--bg-mono); border-radius: 12px; padding: 28px 32px; border: 1px solid var(--border); text-align: center;">
+      <p style="font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 0; font-style: normal;">Pour ce besoin précis, quel modèle NoSQL est le plus adapté — et pourquoi ?</p>
+      <p style="color: var(--text-muted); font-size: 14px; margin-top: 12px; margin-bottom: 0;">Votre réflexion technique est aussi importante que le développement lui-même.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 01 — DIAGNOSTIC ========== -->
+<section class="panel" data-panel="diag">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">ÉTAPE 1 — OBLIGATOIRE</div>
+      <h2 class="project-title">Tableau de diagnostic comparatif</h2>
+      <p class="project-sub">À produire pour les <strong>7 applications</strong> avant de passer au développement.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f3">Obligatoire</span>
+      <span class="tag tag-f1">4 points</span>
+    </div>
+  </div>
+
+  <div class="intro-block">
+    <p>Avant de développer quoi que ce soit, vous devez analyser l'ensemble des 7 applications proposées. Pour chacune, identifiez les données en jeu, les relations importantes et les modèles NoSQL les plus pertinents.</p>
+    <p>Ce tableau n'est pas là pour être rempli vite. Il doit montrer que vous <strong>comprenez les différences entre les modèles</strong> et que vous ne choisissez pas une base de données au hasard.</p>
+  </div>
+
+  <div class="card card-wide" style="overflow-x: auto;">
+    <div class="card-title"><span class="icon-bg icon-blue">◆</span>Tableau à compléter — 7 applications</div>
+    <table class="diag-table">
+      <thead>
+        <tr>
+          <th>Application</th>
+          <th>Données principales</th>
+          <th>Données temp. / rapides</th>
+          <th>Historique éventuel</th>
+          <th>Relations importantes</th>
+          <th>Modèles NoSQL proposés</th>
+          <th>Justification</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="app-name">WC1 · Supporters &amp; équipes</td>
+          <td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td>
+        </tr>
+        <tr>
+          <td class="app-name">WC2 · Réseau joueurs</td>
+          <td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td>
+        </tr>
+        <tr>
+          <td class="app-name">WC3 · Fan Votes</td>
+          <td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td>
+        </tr>
+        <tr>
+          <td class="app-name">WC4 · Live Match Tracker</td>
+          <td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td>
+        </tr>
+        <tr>
+          <td class="app-name">PK1 · Pokédex personnel</td>
+          <td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td>
+        </tr>
+        <tr>
+          <td class="app-name">PK2 · Team Builder</td>
+          <td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td>
+        </tr>
+        <tr>
+          <td class="app-name">PK3 · Votes Pokémon</td>
+          <td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td><td>à compléter</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-grid" style="margin-top: 24px;">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Exemples de raisonnements attendus</div>
+      <ul>
+        <li>Une base <span class="model-pill mp-doc">Document</span> peut stocker des fiches détaillées d'objets métier</li>
+        <li>Une base <span class="model-pill mp-kv">Clé-Valeur</span> peut stocker un compteur, un score ou un état de session</li>
+        <li>Une base <span class="model-pill mp-col">Colonne</span> est adaptée aux événements horodatés et aux séries temporelles</li>
+        <li>Une base <span class="model-pill mp-gph">Graphe</span> excelle pour représenter des relations entre entités</li>
+      </ul>
+      <div class="highlight green">L'important n'est pas seulement d'utiliser plusieurs bases — c'est d'expliquer pourquoi chacune est pertinente.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Ce que ce tableau évalue</div>
+      <ul>
+        <li>Votre capacité à identifier les types de données en jeu</li>
+        <li>Votre compréhension des <strong>forces et limites</strong> de chaque modèle</li>
+        <li>La cohérence de votre raisonnement à travers 7 cas différents</li>
+        <li>La précision de vos justifications (pas de réponse vague acceptée)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ========== WC1 — Supporters ========== -->
+<section class="panel" data-panel="wc1">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">COUPE DU MONDE · APPLICATION WC1</div>
+      <h2 class="project-title">Supporters &amp; équipes favorites</h2>
+      <p class="project-sub">Profils de supporters, équipes suivies, matchs favoris.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f1">Coupe du Monde</span>
+      <span class="tag tag-f2">Relations</span>
+      <span class="tag tag-f5">Graphe ?</span>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Entités principales</div><div class="kpi-value purple">3</div><div class="kpi-sub">Supporter · Équipe · Match</div></div>
+    <div class="kpi"><div class="kpi-label">Relations clés</div><div class="kpi-value green">suit / supporte</div><div class="kpi-sub">entre supporter et entités</div></div>
+    <div class="kpi"><div class="kpi-label">Données rapides ?</div><div class="kpi-value amber">Peut-être</div><div class="kpi-sub">compteurs, stats</div></div>
+    <div class="kpi"><div class="kpi-label">Complexité</div><div class="kpi-value green">Modérée</div><div class="kpi-sub">bon sujet pour démarrer</div></div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>Description</div>
+      <p>L'application permet à des supporters de <strong>créer un profil</strong>, de choisir leurs équipes favorites et de suivre certains matchs.</p>
+      <p>Il s'agit de maintenir des liens entre des entités (supporters, équipes, matchs) tout en stockant des données détaillées sur chacune d'elles.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Fonctionnalités possibles</div>
+      <ul>
+        <li>Créer un profil supporter</li>
+        <li>Afficher la liste des équipes</li>
+        <li>Associer un supporter à une ou plusieurs équipes favorites</li>
+        <li>Associer un supporter à des matchs suivis</li>
+        <li>Afficher les supporters d'une équipe</li>
+        <li>Afficher les équipes et matchs suivis par un supporter</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Questions d'analyse à traiter</div>
+      <ul>
+        <li>Quelles données doivent être stockées durablement ?</li>
+        <li>Quelles relations sont les plus importantes ?</li>
+        <li>Faut-il représenter les liens entre supporters, équipes et matchs sous forme de graphe ?</li>
+        <li>Certains compteurs ou données rapides peuvent-ils être utiles ?</li>
+        <li>Quel modèle serait insuffisant ici — et pourquoi ?</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-purple">●</span>Données à identifier</div>
+      <div class="data-line"><span class="label">Données principales</span><span class="value">Profils, équipes, matchs</span></div>
+      <div class="data-line"><span class="label">Données temporaires</span><span class="value">À déterminer</span></div>
+      <div class="data-line"><span class="label">Historique</span><span class="value">À déterminer</span></div>
+      <div class="data-line"><span class="label">Relations</span><span class="value">Supporter ↔ Équipe ↔ Match</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== WC2 — Réseau joueurs ========== -->
+<section class="panel" data-panel="wc2">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">COUPE DU MONDE · APPLICATION WC2</div>
+      <h2 class="project-title">Réseau des joueurs &amp; des équipes</h2>
+      <p class="project-sub">Fiches joueurs, équipes nationales, postes, clubs.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f1">Coupe du Monde</span>
+      <span class="tag tag-f5">Relations complexes</span>
+      <span class="tag tag-f2">Fiches détaillées</span>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Entités principales</div><div class="kpi-value purple">4</div><div class="kpi-sub">Joueur · Équipe · Poste · Club</div></div>
+    <div class="kpi"><div class="kpi-label">Type de données</div><div class="kpi-value green">Structurées</div><div class="kpi-sub">fiches riches à stocker</div></div>
+    <div class="kpi"><div class="kpi-label">Visualisation</div><div class="kpi-value amber">Réseau</div><div class="kpi-sub">relations à représenter</div></div>
+    <div class="kpi"><div class="kpi-label">Complexité</div><div class="kpi-value amber">Élevée</div><div class="kpi-sub">choix architectural fort</div></div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>Description</div>
+      <p>L'application permet de visualiser les <strong>liens entre les joueurs, les équipes nationales, les postes et éventuellement les clubs</strong>.</p>
+      <p>On y stocke des fiches détaillées sur chaque joueur, mais aussi des relations nombreuses : un joueur appartient à une équipe, joue à un poste, et vient d'un club. Les requêtes traversent souvent plusieurs entités.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Fonctionnalités possibles</div>
+      <ul>
+        <li>Créer une fiche joueur (nom, nationalité, âge, stats)</li>
+        <li>Créer et gérer des équipes nationales</li>
+        <li>Associer un joueur à une équipe et à un poste</li>
+        <li>Afficher tous les joueurs d'une équipe</li>
+        <li>Afficher tous les joueurs d'un même poste</li>
+        <li>Visualiser les relations entre joueurs, équipes et postes</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Questions d'analyse à traiter</div>
+      <ul>
+        <li>Quelles informations détaillées faut-il stocker sur les joueurs ?</li>
+        <li>Quelles relations doivent être représentées ?</li>
+        <li>Faut-il privilégier une structure orientée document, graphe — ou les deux ?</li>
+        <li>Comment les requêtes de type "joueurs d'un même poste dans plusieurs équipes" orientent-elles le choix du modèle ?</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-purple">●</span>Données à identifier</div>
+      <div class="data-line"><span class="label">Données principales</span><span class="value">Fiches joueurs, équipes</span></div>
+      <div class="data-line"><span class="label">Données temporaires</span><span class="value">À déterminer</span></div>
+      <div class="data-line"><span class="label">Historique</span><span class="value">À déterminer</span></div>
+      <div class="data-line"><span class="label">Relations</span><span class="value">Joueur ↔ Équipe ↔ Poste ↔ Club</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== WC3 — Fan Votes ========== -->
+<section class="panel" data-panel="wc3">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">COUPE DU MONDE · APPLICATION WC3</div>
+      <h2 class="project-title">Fan Votes</h2>
+      <p class="project-sub">Votes supporters, compteurs en temps réel, historique des votes.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f1">Coupe du Monde</span>
+      <span class="tag tag-f2">Compteurs rapides</span>
+      <span class="tag tag-f3">Historique</span>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Volume de données</div><div class="kpi-value amber">Potentiellement élevé</div><div class="kpi-sub">votes en masse</div></div>
+    <div class="kpi"><div class="kpi-label">Vitesse</div><div class="kpi-value green">Critique</div><div class="kpi-sub">compteurs en temps réel</div></div>
+    <div class="kpi"><div class="kpi-label">Historique</div><div class="kpi-value purple">Horodaté</div><div class="kpi-sub">chaque vote tracé</div></div>
+    <div class="kpi"><div class="kpi-label">Modèles impliqués</div><div class="kpi-value green">2 à 3</div><div class="kpi-sub">à justifier</div></div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>Description</div>
+      <p>L'application permet aux supporters de <strong>voter pour un joueur, une équipe ou l'homme du match</strong>. Les votes doivent être comptabilisés en temps réel et un classement doit être affiché.</p>
+      <p>L'enjeu est de gérer simultanément des données durables (questions, choix), des compteurs ultra-rapides et un historique horodaté des votes individuels.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Fonctionnalités possibles</div>
+      <ul>
+        <li>Créer un vote lié à un match</li>
+        <li>Afficher les choix disponibles</li>
+        <li>Permettre à un utilisateur de voter</li>
+        <li>Afficher le nombre de votes par choix en temps réel</li>
+        <li>Conserver l'historique des votes</li>
+        <li>Afficher le classement actuel</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Questions d'analyse à traiter</div>
+      <ul>
+        <li>Où stocker la question du vote et les choix proposés ?</li>
+        <li>Comment stocker chaque vote individuel de façon efficace ?</li>
+        <li>Comment afficher rapidement les compteurs sans recalculer à chaque fois ?</li>
+        <li>Faut-il conserver un historique horodaté de tous les votes ?</li>
+        <li>Quels modèles NoSQL sont les plus adaptés à chacun de ces besoins ?</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-purple">●</span>Données à identifier</div>
+      <div class="data-line"><span class="label">Données principales</span><span class="value">Questions, choix disponibles</span></div>
+      <div class="data-line"><span class="label">Données temporaires</span><span class="value">Compteurs par choix</span></div>
+      <div class="data-line"><span class="label">Historique</span><span class="value">Votes horodatés</span></div>
+      <div class="data-line"><span class="label">Relations</span><span class="value">Vote ↔ Utilisateur ↔ Match</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== WC4 — Live Match Tracker ========== -->
+<section class="panel" data-panel="wc4">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">COUPE DU MONDE · APPLICATION WC4</div>
+      <h2 class="project-title">Live Match Tracker</h2>
+      <p class="project-sub">Suivi de match en direct, événements chronologiques, score en temps réel.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f1">Coupe du Monde</span>
+      <span class="tag tag-f3">Timeline</span>
+      <span class="tag tag-f2">Temps réel</span>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">État du score</div><div class="kpi-value green">Temps réel</div><div class="kpi-sub">mis à jour à chaque but</div></div>
+    <div class="kpi"><div class="kpi-label">Événements</div><div class="kpi-value purple">Horodatés</div><div class="kpi-sub">but, carton, remplacement...</div></div>
+    <div class="kpi"><div class="kpi-label">Chronologie</div><div class="kpi-value amber">Critique</div><div class="kpi-sub">l'ordre des événements compte</div></div>
+    <div class="kpi"><div class="kpi-label">Complexité</div><div class="kpi-value amber">Élevée</div><div class="kpi-sub">deux natures de données</div></div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>Description</div>
+      <p>L'application permet de <strong>suivre un match en direct</strong> avec des événements : but, carton jaune/rouge, remplacement, début et fin de mi-temps, etc.</p>
+      <p>L'enjeu est de gérer à la fois un <strong>état courant</strong> (score en direct, équipes) et une <strong>timeline d'événements</strong> ordonnée chronologiquement.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Fonctionnalités possibles</div>
+      <ul>
+        <li>Créer un match avec les deux équipes participantes</li>
+        <li>Ajouter un événement en cours de match</li>
+        <li>Afficher la chronologie complète du match</li>
+        <li>Afficher le score actuel</li>
+        <li>Filtrer par type d'événement (buts uniquement, cartons...)</li>
+        <li>Consulter l'historique complet d'un match terminé</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Questions d'analyse à traiter</div>
+      <ul>
+        <li>Quelles données décrivent le match en lui-même ?</li>
+        <li>Quelles données évoluent en temps réel pendant le match ?</li>
+        <li>Quels événements doivent être historisés dans l'ordre chronologique ?</li>
+        <li>Quel modèle est adapté à une timeline d'événements horodatés ?</li>
+        <li>Quel modèle est adapté pour stocker et lire un score en temps réel ?</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-purple">●</span>Données à identifier</div>
+      <div class="data-line"><span class="label">Données principales</span><span class="value">Fiche match, équipes</span></div>
+      <div class="data-line"><span class="label">Données temporaires</span><span class="value">Score courant, état du match</span></div>
+      <div class="data-line"><span class="label">Historique</span><span class="value">Événements horodatés</span></div>
+      <div class="data-line"><span class="label">Relations</span><span class="value">Match ↔ Équipes ↔ Joueurs</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PK1 — Pokédex ========== -->
+<section class="panel" data-panel="pk1">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">POKÉMON · APPLICATION PK1</div>
+      <h2 class="project-title">Pokédex personnel</h2>
+      <p class="project-sub">Catalogue Pokémon, favoris utilisateur, historique de consultation.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f2">Pokémon</span>
+      <span class="tag tag-f1">Document</span>
+      <span class="tag tag-f3">Cache</span>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Données fournies</div><div class="kpi-value green">pokemon.json</div><div class="kpi-sub">151 Pokémon Gen 1</div></div>
+    <div class="kpi"><div class="kpi-label">Recherche</div><div class="kpi-value purple">Full-text</div><div class="kpi-sub">par nom, type, stats</div></div>
+    <div class="kpi"><div class="kpi-label">Données rapides</div><div class="kpi-value amber">Utiles</div><div class="kpi-sub">derniers consultés, populaires</div></div>
+    <div class="kpi"><div class="kpi-label">Complexité</div><div class="kpi-value green">Accessible</div><div class="kpi-sub">bon point d'entrée</div></div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>Description</div>
+      <p>L'application permet de <strong>consulter la liste des Pokémon</strong> et de créer un Pokédex personnel avec les Pokémon favoris d'un utilisateur.</p>
+      <p>Un fichier <code>pokemon.json</code> est fourni avec les 151 Pokémon de la première génération. Vous pouvez l'importer directement dans MongoDB ou l'utiliser comme jeu de données initial.</p>
+      <div class="highlight green">📦 Le fichier pokemon.json est fourni — concentrez-vous sur les modèles NoSQL, pas sur la récupération des données.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Fonctionnalités possibles</div>
+      <ul>
+        <li>Afficher la liste des 151 Pokémon</li>
+        <li>Consulter la fiche détaillée d'un Pokémon</li>
+        <li>Rechercher par nom, type ou génération</li>
+        <li>Ajouter un Pokémon à son Pokédex personnel (favoris)</li>
+        <li>Afficher les Pokémon favoris d'un utilisateur</li>
+        <li>Afficher les derniers Pokémon consultés</li>
+        <li>Afficher les Pokémon les plus populaires</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Questions d'analyse à traiter</div>
+      <ul>
+        <li>Quelles données Pokémon doivent être stockées durablement ?</li>
+        <li>Faut-il stocker les favoris de chaque utilisateur — et comment ?</li>
+        <li>Certaines recherches ou consultations peuvent-elles être mises en cache ?</li>
+        <li>Quelles données sont durables et quelles données sont temporaires ou calculées ?</li>
+        <li>Comment stocker "les derniers Pokémon consultés" efficacement ?</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-purple">●</span>Structure du fichier fourni</div>
+      <div class="data-line"><span class="label">Fichier</span><span class="value">pokemon.json</span></div>
+      <div class="data-line"><span class="label">Quantité</span><span class="value">151 Pokémon</span></div>
+      <div class="data-line"><span class="label">Champs</span><span class="value">id, name, types, stats, abilities</span></div>
+      <div class="data-line"><span class="label">Import direct</span><span class="value">MongoDB Atlas ou CLI</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PK2 — Team Builder ========== -->
+<section class="panel" data-panel="pk2">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">POKÉMON · APPLICATION PK2</div>
+      <h2 class="project-title">Team Builder Pokémon</h2>
+      <p class="project-sub">Composition d'équipes, équilibrage par types et rôles, visualisation des faiblesses.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f2">Pokémon</span>
+      <span class="tag tag-f5">Graphe ?</span>
+      <span class="tag tag-f1">Document</span>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Taille équipe</div><div class="kpi-value purple">6 Pokémon max</div><div class="kpi-sub">contrainte métier</div></div>
+    <div class="kpi"><div class="kpi-label">Relations</div><div class="kpi-value amber">Types / Rôles</div><div class="kpi-sub">entre Pokémon</div></div>
+    <div class="kpi"><div class="kpi-label">Analyse</div><div class="kpi-value green">Faiblesses</div><div class="kpi-sub">calcul d'équilibrage</div></div>
+    <div class="kpi"><div class="kpi-label">Complexité</div><div class="kpi-value amber">Élevée</div><div class="kpi-sub">choix graphe à justifier</div></div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>Description</div>
+      <p>L'application permet à un utilisateur de <strong>composer une équipe de 6 Pokémon</strong> équilibrée selon les types, les rôles et les faiblesses.</p>
+      <p>L'objectif est d'aider l'utilisateur à identifier les manques dans son équipe : types absents, faiblesses dominantes, rôles redondants.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Fonctionnalités possibles</div>
+      <ul>
+        <li>Afficher la liste des Pokémon disponibles</li>
+        <li>Ajouter un Pokémon à une équipe (max 6)</li>
+        <li>Afficher les types présents dans l'équipe</li>
+        <li>Afficher les rôles des Pokémon (attaque, défense, vitesse…)</li>
+        <li>Visualiser les liens entre Pokémon, types et rôles</li>
+        <li>Identifier les faiblesses dominantes de l'équipe</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Questions d'analyse à traiter</div>
+      <ul>
+        <li>Quelles données doivent être stockées sous forme de documents ?</li>
+        <li>Quelles relations sont importantes entre Pokémon, types et rôles ?</li>
+        <li>Est-il pertinent d'utiliser un modèle graphe ici — et si oui, pourquoi ?</li>
+        <li>Certaines données peuvent-elles être calculées et mises en cache ?</li>
+        <li>Comment stocker une équipe en cours de composition ?</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-purple">●</span>Données à identifier</div>
+      <div class="data-line"><span class="label">Données principales</span><span class="value">Pokémon, équipes utilisateur</span></div>
+      <div class="data-line"><span class="label">Données temporaires</span><span class="value">Équipe en cours, cache stats</span></div>
+      <div class="data-line"><span class="label">Historique</span><span class="value">À déterminer</span></div>
+      <div class="data-line"><span class="label">Relations</span><span class="value">Pokémon ↔ Type ↔ Rôle</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PK3 — Votes Pokémon ========== -->
+<section class="panel" data-panel="pk3">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">POKÉMON · APPLICATION PK3</div>
+      <h2 class="project-title">Votes Pokémon favoris</h2>
+      <p class="project-sub">Votes, classement en temps réel, historique des suffrages.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f2">Pokémon</span>
+      <span class="tag tag-f2">Compteurs</span>
+      <span class="tag tag-f3">Historique</span>
+    </div>
+  </div>
+
+  <div class="kpi-strip">
+    <div class="kpi"><div class="kpi-label">Classement</div><div class="kpi-value green">Temps réel</div><div class="kpi-sub">mis à jour à chaque vote</div></div>
+    <div class="kpi"><div class="kpi-label">Volume votes</div><div class="kpi-value amber">Potentiellement élevé</div><div class="kpi-sub">scalabilité importante</div></div>
+    <div class="kpi"><div class="kpi-label">Historique</div><div class="kpi-value purple">Horodaté</div><div class="kpi-sub">évolution dans le temps</div></div>
+    <div class="kpi"><div class="kpi-label">Données fournies</div><div class="kpi-value green">pokemon.json</div><div class="kpi-sub">à importer dans MongoDB</div></div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>Description</div>
+      <p>L'application permet aux utilisateurs de <strong>voter pour leur Pokémon préféré</strong> et d'afficher un classement mis à jour en temps réel.</p>
+      <p>Comme pour l'application Fan Votes, l'enjeu est de gérer simultanément des <strong>données durables</strong> (les Pokémon disponibles), des <strong>compteurs rapides</strong> et un <strong>historique horodaté</strong> des votes.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Fonctionnalités possibles</div>
+      <ul>
+        <li>Afficher une sélection de Pokémon disponibles au vote</li>
+        <li>Voter pour un Pokémon</li>
+        <li>Enregistrer chaque vote individuellement</li>
+        <li>Afficher le nombre de votes par Pokémon</li>
+        <li>Afficher le classement des Pokémon les plus populaires</li>
+        <li>Consulter l'historique des votes</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Questions d'analyse à traiter</div>
+      <ul>
+        <li>Où stocker les fiches Pokémon disponibles au vote ?</li>
+        <li>Comment stocker les votes individuels de façon efficace ?</li>
+        <li>Comment afficher rapidement les compteurs de votes sans recalculer à chaque fois ?</li>
+        <li>Faut-il historiser les votes dans le temps — et avec quel modèle ?</li>
+        <li>Quels modèles NoSQL sont les plus adaptés à chacun de ces besoins ?</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-purple">●</span>Données à identifier</div>
+      <div class="data-line"><span class="label">Données principales</span><span class="value">Pokémon (depuis pokemon.json)</span></div>
+      <div class="data-line"><span class="label">Données temporaires</span><span class="value">Compteurs de votes</span></div>
+      <div class="data-line"><span class="label">Historique</span><span class="value">Votes individuels horodatés</span></div>
+      <div class="data-line"><span class="label">Relations</span><span class="value">Vote ↔ Utilisateur ↔ Pokémon</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== LIVRABLES ========== -->
+<section class="panel" data-panel="livr">
+  <div class="project-header">
+    <div class="project-title-block">
+      <div class="project-letter">LIVRABLES & BARÈME</div>
+      <h2 class="project-title">Ce que vous devez rendre</h2>
+      <p class="project-sub">3 livrables attendus · rendu écrit uniquement.</p>
+    </div>
+    <div class="project-tags">
+      <span class="tag tag-f2">Total : 20 pts</span>
+      <span class="tag tag-f1">Rendu écrit</span>
+    </div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-blue">◆</span>Livrable 1 — Tableau de diagnostic</div>
+      <p>Le tableau doit analyser les <strong>7 applications proposées</strong> et proposer les modèles NoSQL les plus adaptés à chacune.</p>
+      <p>Ce tableau est <strong>obligatoire</strong>. Il doit montrer que vous avez compris les différences entre les modèles NoSQL.</p>
+      <div class="highlight">Format libre (tableur, document, capture d'écran). Ce qui compte, c'est le contenu du raisonnement.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Livrable 2 — Mini-application</div>
+      <p>L'application choisie doit être <strong>fonctionnelle, même simplement</strong>. Elle doit démontrer l'utilisation d'au moins deux modèles NoSQL.</p>
+      <ul>
+        <li>Une base de données principale</li>
+        <li>Un deuxième modèle NoSQL utilisé pour un besoin différent</li>
+        <li>Un jeu de données de test importé</li>
+        <li>Des opérations simples de création, lecture ou mise à jour</li>
+        <li>Une démonstration claire de chaque modèle NoSQL choisi</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Livrable 3 — Document de justification</div>
+      <p>Un court document (pas nécessairement long) qui explique :</p>
+      <ul>
+        <li>Le sujet choisi et pourquoi</li>
+        <li>Les fonctionnalités développées</li>
+        <li>Les modèles NoSQL utilisés et le rôle de chacun</li>
+        <li>Les collections, tables, clés ou relations créées</li>
+        <li>Les limites du projet et les améliorations possibles</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="card card-wide">
+    <div class="card-title"><span class="icon-bg icon-blue">◆</span>Barème détaillé</div>
+    <table class="score-table">
+      <thead>
+        <tr>
+          <th>Critère évalué</th>
+          <th>Description</th>
+          <th style="text-align: right;">Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Diagnostic des 7 applications</strong></td>
+          <td style="color: var(--text-muted);">Tableau complet et raisonné pour chaque application</td>
+          <td class="pts" style="text-align: right;">/ 4</td>
+        </tr>
+        <tr>
+          <td><strong>Pertinence du choix des modèles NoSQL</strong></td>
+          <td style="color: var(--text-muted);">Les modèles choisis sont cohérents avec le besoin identifié</td>
+          <td class="pts" style="text-align: right;">/ 4</td>
+        </tr>
+        <tr>
+          <td><strong>Réalisation technique de l'application</strong></td>
+          <td style="color: var(--text-muted);">L'application est fonctionnelle et démontre les modèles choisis</td>
+          <td class="pts" style="text-align: right;">/ 4</td>
+        </tr>
+        <tr>
+          <td><strong>Utilisation correcte d'au moins deux modèles</strong></td>
+          <td style="color: var(--text-muted);">Chaque modèle est utilisé pour un besoin distinct et justifié</td>
+          <td class="pts" style="text-align: right;">/ 3</td>
+        </tr>
+        <tr>
+          <td><strong>Données de test cohérentes</strong></td>
+          <td style="color: var(--text-muted);">Le jeu de données importé est pertinent et correctement structuré</td>
+          <td class="pts" style="text-align: right;">/ 2</td>
+        </tr>
+        <tr>
+          <td><strong>Justification technique</strong></td>
+          <td style="color: var(--text-muted);">Le document de justification est clair, argumenté et explique pourquoi chaque modèle a été retenu</td>
+          <td class="pts" style="text-align: right;">/ 3</td>
+        </tr>
+        <tr class="total">
+          <td><strong>Total</strong></td>
+          <td style="color: var(--text-muted);">—</td>
+          <td class="pts" style="text-align: right;">/ 20</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-grid" style="margin-top: 24px;">
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-green">◇</span>Contraintes minimales obligatoires</div>
+      <ul class="checklist">
+        <li><span class="check-icon blue">✓</span>Utiliser au minimum <strong>deux modèles NoSQL différents</strong></li>
+        <li><span class="check-icon blue">✓</span>Justifier le rôle de chaque base utilisée</li>
+        <li><span class="check-icon blue">✓</span>Insérer ou importer un jeu de données cohérent</li>
+        <li><span class="check-icon blue">✓</span>Réaliser au moins <strong>trois opérations ou requêtes significatives</strong></li>
+        <li><span class="check-icon blue">✓</span>Présenter une architecture simple de votre application</li>
+        <li><span class="check-icon blue">✓</span>Expliquer dans le document de justification pourquoi un autre modèle aurait été moins adapté</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon-bg icon-amber">◈</span>Outils disponibles</div>
+      <ul>
+        <li>MongoDB Atlas + Compass (modèle Document)</li>
+        <li>Redis via Docker + RedisInsight (modèle Clé-Valeur)</li>
+        <li>Cassandra via Docker (modèle Colonne)</li>
+        <li>Neo4j Desktop + Browser (modèle Graphe)</li>
+        <li>Express.js pour une API minimale si nécessaire</li>
+        <li>Formulaires simples ou interface web minimale</li>
+      </ul>
+      <div class="highlight amber">L'interface n'a pas besoin d'être avancée. Ce qui est évalué en priorité est la cohérence entre le besoin et les modèles choisis.</div>
+    </div>
+  </div>
+
+  <div class="card card-wide" style="margin-top: 8px;">
+    <div class="card-title"><span class="icon-bg icon-red">▲</span>Le conseil le plus important</div>
+    <div style="background: var(--bg-mono); border-radius: 12px; padding: 24px 28px; border: 1px solid var(--border); display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 260px;">
+        <p style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Ne cherchez pas à développer une application trop complexe.</p>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 0;">Un projet simple, clair et <strong>bien justifié</strong> sera toujours mieux évalué qu'un projet ambitieux mais mal maîtrisé.</p>
+      </div>
+      <div style="background: var(--bg-elev); border-radius: 10px; padding: 18px 22px; border-left: 3px solid var(--primary); min-width: 240px;">
+        <p style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--primary); margin-bottom: 4px;">La question qui guide tout :</p>
+        <p style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 0;">Pour ce besoin précis, quel modèle NoSQL est le plus adapté — et pourquoi ?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer nav -->
+<div class="footer-nav">
+  <button class="nav-btn" id="prevBtn">← Précédent</button>
+  <span class="mono" style="color: var(--text-muted); font-size: 13px;" id="counter"></span>
+  <button class="nav-btn" id="nextBtn">Suivant →</button>
+</div>
+
+</main>
+
+<script>
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.panel');
+const order = ['ctx','diag','wc1','wc2','wc3','wc4','pk1','pk2','pk3','livr'];
+const labels = {
+  ctx: 'Contexte', diag: 'Diagnostic',
+  wc1: 'WC1 · Supporters', wc2: 'WC2 · Réseau joueurs',
+  wc3: 'WC3 · Fan Votes', wc4: 'WC4 · Live Tracker',
+  pk1: 'PK1 · Pokédex', pk2: 'PK2 · Team Builder', pk3: 'PK3 · Votes',
+  livr: 'Livrables & Barème'
+};
+const counter = document.getElementById('counter');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+function activate(key) {
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === key));
+  panels.forEach(p => p.classList.toggle('active', p.dataset.panel === key));
+  const idx = order.indexOf(key);
+  counter.textContent = `${labels[key]}  ·  ${idx + 1} / ${order.length}`;
+  prevBtn.disabled = idx === 0;
+  nextBtn.disabled = idx === order.length - 1;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => activate(tab.dataset.tab));
+});
+prevBtn.addEventListener('click', () => {
+  const cur = order.indexOf(document.querySelector('.tab.active').dataset.tab);
+  if (cur > 0) activate(order[cur - 1]);
+});
+nextBtn.addEventListener('click', () => {
+  const cur = order.indexOf(document.querySelector('.tab.active').dataset.tab);
+  if (cur < order.length - 1) activate(order[cur + 1]);
+});
+
+activate('ctx');
+</script>
+</body>
+</html>
